@@ -1,0 +1,137 @@
+import AppKit
+import ServiceManagement
+import SwiftUI
+
+private struct LoginItemToggle: View {
+    @State private var enabled = SMAppService.mainApp.status == .enabled
+    @State private var message: String?
+
+    var body: some View {
+        Toggle("Open at login", isOn: Binding(get: { enabled }, set: update))
+        Text(message ?? "Starts the panel when you log in. Keep the app in your Applications folder so macOS can find it.")
+            .font(.callout)
+            .foregroundStyle(message == nil ? .secondary : Color.red)
+    }
+
+    private func update(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+            message = nil
+        } catch {
+            message = error.localizedDescription
+        }
+        let status = SMAppService.mainApp.status
+        enabled = status == .enabled
+        if status == .requiresApproval {
+            message = "Approve it in System Settings, under General, then Login Items."
+        }
+    }
+}
+
+struct PanelTab: View {
+    @ObservedObject var prefs: Preferences
+
+    var body: some View {
+        Form {
+            Section("General") {
+                LoginItemToggle()
+            }
+            Section("Layout") {
+                Toggle("Stack the lamps vertically", isOn: $prefs.vertical)
+                Toggle("Show a background behind the lamps", isOn: $prefs.showBackground)
+                Toggle("Keep the panel above other windows", isOn: $prefs.alwaysOnTop)
+                Toggle("Show each group's place name", isOn: $prefs.showPlaceLabel)
+                Toggle("Show each group's tmux session name", isOn: $prefs.showSessionLabel)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct PlacesTab: View {
+    @ObservedObject var prefs: Preferences
+    @State private var selection: String?
+
+    var body: some View {
+        HStack(spacing: 0) {
+            sidebar.frame(width: 200)
+            Divider()
+            detail.frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .onAppear { if selection == nil { selection = prefs.places.first?.id } }
+    }
+
+    private var sidebar: some View {
+        VStack(spacing: 0) {
+            List(selection: $selection) {
+                ForEach($prefs.places) { $place in
+                    HStack(spacing: 8) {
+                        Toggle("Show on the panel", isOn: $place.enabled)
+                            .labelsHidden()
+                            .toggleStyle(.checkbox)
+                        Text(place.name.isEmpty ? "Untitled" : place.name).lineLimit(1)
+                    }
+                    .tag(place.id)
+                }
+            }
+            .listStyle(.sidebar)
+            Divider()
+            HStack(spacing: 0) {
+                Button(action: addPlace) { Image(systemName: "plus").frame(width: 28, height: 24) }
+                    .help("Add a place")
+                Button(action: removePlace) { Image(systemName: "minus").frame(width: 28, height: 24) }
+                    .help("Remove the selected place")
+                    .disabled(selection == nil)
+                Spacer()
+            }
+            .buttonStyle(.borderless)
+        }
+    }
+
+    @ViewBuilder private var detail: some View {
+        if let index = prefs.places.firstIndex(where: { $0.id == selection }) {
+            let kind = prefs.places[index].kind
+            Form {
+                TextField("Name", text: $prefs.places[index].name)
+                Picker("Where", selection: $prefs.places[index].kind) {
+                    ForEach(PlaceKind.allCases) { Text($0.title).tag($0) }
+                }
+                if kind != .local {
+                    TextField(
+                        kind == .ssh ? "Computer" : "Address",
+                        text: $prefs.places[index].address,
+                        prompt: Text(kind == .ssh ? "myserver or user@host" : "127.0.0.1:47500")
+                    )
+                    .autocorrectionDisabled()
+                    if prefs.places[index].connection == nil, !prefs.places[index].address.isEmpty {
+                        Text("That doesn't look right.").foregroundStyle(.red)
+                    }
+                }
+                Text(hint(for: kind)).font(.callout).foregroundStyle(.secondary)
+            }
+            .formStyle(.grouped)
+        } else {
+            Text("Add a place with the + button.").foregroundStyle(.secondary)
+        }
+    }
+
+    private func hint(for kind: PlaceKind) -> String {
+        switch kind {
+        case .local: "Claude sessions in tmux on this Mac. There's nothing to set up."
+        case .ssh: "Logs in with your SSH keys, so it has to work without a password. The other computer needs python3 and tmux."
+        case .tcp: "For a backend you already run, such as claude_traffic.py serve."
+        }
+    }
+
+    private func addPlace() {
+        let place = Place(name: "New place", kind: .ssh, enabled: false)
+        prefs.places.append(place)
+        selection = place.id
+    }
+
+    private func removePlace() {
+        guard let selection, let index = prefs.places.firstIndex(where: { $0.id == selection }) else { return }
+        prefs.places.remove(at: index)
+        self.selection = prefs.places.first?.id
+    }
+}
