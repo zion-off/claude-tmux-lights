@@ -50,6 +50,8 @@ struct PanelTheme: Identifiable {
         case glass
         /// Faceted lenses seated in chrome bezels, like pilot lights on an old control panel.
         case jewel
+        /// Ridged glass lenses under visors in signal housings, mounted on a backplate.
+        case signal
     }
 
     let id: String
@@ -99,7 +101,19 @@ struct PanelTheme: Identifiable {
         seam: Color.gray.opacity(0.5)
     )
 
-    static let all = [PanelTheme.default, .glass, .jewel]
+    static let signal = PanelTheme(
+        id: "signal",
+        name: "Traffic Light",
+        finish: .signal,
+        waiting: LampPalette(top: 0xFFC14D, bottom: 0xF27A00, bloom: 0xFFA020, haze: 0xFF7A00),
+        busy: LampPalette(top: 0x7CC0FF, bottom: 0x0E64E6, bloom: 0x3D8BFF, haze: 0x2B55FF),
+        caseFill: Color(hex: 0x0B0B0B),
+        unlitLens: Color(hex: 0x1A1B1C),
+        unlitLegend: Color(hex: 0x8A8F99),
+        seam: Color.gray.opacity(0.5)
+    )
+
+    static let all = [PanelTheme.default, .glass, .jewel, .signal]
 
     static func named(_ id: String) -> PanelTheme {
         all.first { $0.id == id } ?? .default

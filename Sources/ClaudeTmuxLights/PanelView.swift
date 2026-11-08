@@ -35,6 +35,8 @@ struct LightBar: View {
     @ViewBuilder private var caseBackground: some View {
         if style.showBackground, theme.finish == .glass {
             glassCase
+        } else if style.showBackground, theme.finish == .signal {
+            SignalBackplate()
         } else if style.showBackground {
             ZStack {
                 Capsule(style: .continuous).fill(.ultraThinMaterial)

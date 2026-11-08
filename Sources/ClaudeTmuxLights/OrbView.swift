@@ -117,6 +117,7 @@ struct OrbView: View {
         case .solid: SolidLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .glass: GlassBead(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .jewel: JewelLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
+        case .signal: SignalLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         }
     }
 
@@ -125,6 +126,7 @@ struct OrbView: View {
         case .solid: SolidBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .glass: GlassBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .jewel: JewelBloom(look: look, lit: lit, rim: rim, pulse: pulse)
+        case .signal: SignalBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         }
     }
 }
