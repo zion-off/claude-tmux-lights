@@ -21,6 +21,9 @@ final class Preferences: ObservableObject {
     @Published var showSessionLabel: Bool {
         didSet { defaults.set(showSessionLabel, forKey: "showSessionLabel") }
     }
+    @Published var theme: String {
+        didSet { defaults.set(theme, forKey: "theme") }
+    }
     @Published var places: [Place] {
         didSet { Self.save(places, to: defaults) }
     }
@@ -32,12 +35,14 @@ final class Preferences: ObservableObject {
             "showBackground": false,
             "showPlaceLabel": false,
             "showSessionLabel": false,
+            "theme": PanelTheme.default.id,
         ])
         alwaysOnTop = defaults.bool(forKey: "alwaysOnTop")
         vertical = defaults.bool(forKey: "vertical")
         showBackground = defaults.bool(forKey: "showBackground")
         showPlaceLabel = defaults.bool(forKey: "showPlaceLabel")
         showSessionLabel = defaults.bool(forKey: "showSessionLabel")
+        theme = defaults.string(forKey: "theme") ?? PanelTheme.default.id
         places = Self.loadPlaces(defaults)
         Self.save(places, to: defaults)
     }

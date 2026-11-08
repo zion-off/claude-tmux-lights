@@ -27,6 +27,8 @@ struct LightBar: View {
     let showPlaceLabel: Bool
     let showSessionLabel: Bool
 
+    @Environment(\.panelTheme) private var theme
+
     private var showsCaptions: Bool { showPlaceLabel || showSessionLabel }
 
     var body: some View {
@@ -46,10 +48,12 @@ struct LightBar: View {
     }
 
     @ViewBuilder private var caseBackground: some View {
-        if showBackground {
+        if showBackground, theme.finish == .glass {
+            glassCase
+        } else if showBackground {
             ZStack {
                 Capsule(style: .continuous).fill(.ultraThinMaterial)
-                Capsule(style: .continuous).fill(Theme.caseFill.opacity(0.82))
+                Capsule(style: .continuous).fill(theme.caseFill.opacity(0.82))
                 Capsule(style: .continuous).strokeBorder(
                     LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom),
                     lineWidth: 1
@@ -58,6 +62,20 @@ struct LightBar: View {
             .environment(\.colorScheme, .dark)
         } else {
             Capsule(style: .continuous).fill(Color.black.opacity(0.01))
+        }
+    }
+
+    @ViewBuilder private var glassCase: some View {
+        if #available(macOS 26, *) {
+            Color.clear.glassEffect(.regular, in: Capsule(style: .continuous))
+        } else {
+            ZStack {
+                Capsule(style: .continuous).fill(.ultraThinMaterial)
+                Capsule(style: .continuous).strokeBorder(
+                    LinearGradient(colors: [.white.opacity(0.45), .white.opacity(0.08)], startPoint: .top, endPoint: .bottom),
+                    lineWidth: 1
+                )
+            }
         }
     }
 
@@ -134,7 +152,7 @@ struct LightBar: View {
     private func caption(_ text: String) -> some View {
         Text(text.isEmpty ? " " : text)
             .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(.white)
+            .foregroundStyle(showBackground && theme.finish == .glass ? Color.primary : .white)
             .lineLimit(1)
             .padding(.horizontal, 7)
             .padding(.vertical, 2)
@@ -143,7 +161,7 @@ struct LightBar: View {
 
     private var seam: some View {
         Capsule()
-            .fill(Theme.seam)
+            .fill(theme.seam)
             .frame(
                 width: vertical ? Theme.seamLength : Theme.seamThickness,
                 height: vertical ? Theme.seamThickness : Theme.seamLength
@@ -165,6 +183,7 @@ struct PanelView: View {
             showPlaceLabel: prefs.showPlaceLabel,
             showSessionLabel: prefs.showSessionLabel
         )
+        .environment(\.panelTheme, PanelTheme.named(prefs.theme))
         .onGeometryChange(for: CGSize.self) { $0.size } action: { onSize($0) }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())

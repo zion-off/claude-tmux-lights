@@ -70,9 +70,6 @@ enum Theme {
         }
     }
 
-    static let waiting = Lamp(top: 0xFFCB45, bottom: 0xFF9F0A, bloom: 0xFFB000, haze: 0xFF7A00)
-    static let busy = Lamp(top: 0x5BAEFF, bottom: 0x0A6CFF, bloom: 0x3D8BFF, haze: 0x2B55FF)
-
     static func average(_ a: UInt32, _ b: UInt32) -> UInt32 {
         func channel(_ shift: UInt32) -> UInt32 { (((a >> shift) & 0xFF) + ((b >> shift) & 0xFF)) / 2 }
         return channel(16) << 16 | channel(8) << 8 | channel(0)
@@ -111,11 +108,6 @@ enum Theme {
         return .black
     }
 
-    static let caseFill = Color(hex: 0x0F1013)
-    static let unlitLens = Color(hex: 0x16181D)
-    static let unlitLegend = Color(hex: 0x8A8F99)
-    static let seam = Color.gray.opacity(0.5)
-
     static let lampSize: CGFloat = 34
     static let socketSize: CGFloat = 38
     static let spacing: CGFloat = 6
@@ -126,4 +118,73 @@ enum Theme {
     static let glowMargin: CGFloat = 14
     static let pulsePeriod = 1.8
     static let shrinkDelay = 0.3
+}
+
+struct PanelTheme: Identifiable {
+    enum Finish {
+        /// Opaque lenses in a dark capsule.
+        case solid
+        /// Translucent beads in a liquid glass capsule.
+        case glass
+    }
+
+    let id: String
+    let name: String
+    let finish: Finish
+    let waiting: Theme.Lamp
+    let busy: Theme.Lamp
+    let caseFill: Color
+    let unlitLens: Color
+    let unlitLegend: Color
+    let seam: Color
+
+    static let `default` = PanelTheme(
+        id: "default",
+        name: "Default",
+        finish: .solid,
+        waiting: Theme.Lamp(top: 0xFFCB45, bottom: 0xFF9F0A, bloom: 0xFFB000, haze: 0xFF7A00),
+        busy: Theme.Lamp(top: 0x5BAEFF, bottom: 0x0A6CFF, bloom: 0x3D8BFF, haze: 0x2B55FF),
+        caseFill: Color(hex: 0x0F1013),
+        unlitLens: Color(hex: 0x16181D),
+        unlitLegend: Color(hex: 0x8A8F99),
+        seam: Color.gray.opacity(0.5)
+    )
+
+    // Beads are see-through, so the legend sits on a nearly opaque core: a lit tint or dark smoke.
+    static let glass = PanelTheme(
+        id: "glass",
+        name: "Glass",
+        finish: .glass,
+        waiting: Theme.Lamp(top: 0xFFCF5C, bottom: 0xFFA21A, bloom: 0xFFB52E, haze: 0xFF8A00),
+        busy: Theme.Lamp(top: 0x7DBBFF, bottom: 0x1F7BFF, bloom: 0x4C97FF, haze: 0x3366FF),
+        caseFill: Color(hex: 0x0F1013),
+        unlitLens: Color(hex: 0x16181D).opacity(0.82),
+        unlitLegend: Color(hex: 0x8A8F99),
+        seam: Color.gray.opacity(0.5)
+    )
+
+    static let all = [PanelTheme.default, .glass]
+
+    static func named(_ id: String) -> PanelTheme {
+        all.first { $0.id == id } ?? .default
+    }
+
+    func lamp(for look: Look) -> Theme.Lamp? {
+        switch look {
+        case .waiting: waiting
+        case .busy: busy
+        case .idle, .unknown, .down: nil
+        }
+    }
+}
+
+private struct PanelThemeKey: EnvironmentKey {
+    static let defaultValue = PanelTheme.default
+}
+
+extension EnvironmentValues {
+    var panelTheme: PanelTheme {
+        get { self[PanelThemeKey.self] }
+        set { self[PanelThemeKey.self] = newValue }
+    }
 }

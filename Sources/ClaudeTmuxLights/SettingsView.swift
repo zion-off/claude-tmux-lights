@@ -37,6 +37,9 @@ struct PanelTab: View {
                 LoginItemToggle()
             }
             Section("Layout") {
+                Picker("Theme", selection: $prefs.theme) {
+                    ForEach(PanelTheme.all) { Text($0.name).tag($0.id) }
+                }
                 Toggle("Stack the lamps vertically", isOn: $prefs.vertical)
                 Toggle("Show a background behind the lamps", isOn: $prefs.showBackground)
                 Toggle("Keep the panel above other windows", isOn: $prefs.alwaysOnTop)
