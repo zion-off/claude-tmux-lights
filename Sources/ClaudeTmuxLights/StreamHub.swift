@@ -39,31 +39,10 @@ final class StreamHub: ObservableObject {
     }
 
     private func rebuild() {
-        let enabled = places.filter(\.enabled)
-        guard !enabled.isEmpty else {
-            update([.offline(placeID: "none", placeName: "", tooltip: "No place is turned on. Right-click, then choose Settings…")])
-            return
+        let states = streams.mapValues {
+            StreamState(isUp: $0.stream.link == .up, claudes: $0.stream.claudes)
         }
-
-        var result: [Entry] = []
-        for place in enabled {
-            guard let stream = streams[place.id]?.stream else {
-                result.append(.offline(placeID: place.id, placeName: place.name, tooltip: "\(place.name): check the address in Settings…"))
-                continue
-            }
-            if stream.link == .down {
-                result.append(.offline(placeID: place.id, placeName: place.name, tooltip: "\(place.name): not connected"))
-                continue
-            }
-            for claude in stream.claudes {
-                var shown = claude
-                shown.placeID = place.id
-                shown.placeName = place.name
-                shown.id = "\(place.id)|\(claude.id)"
-                result.append(.claude(shown))
-            }
-        }
-        update(result)
+        update(EntryBuilder.build(places: places, states: states))
     }
 
     private func update(_ result: [Entry]) {

@@ -1,56 +1,41 @@
 import AppKit
 import SwiftUI
 
-private struct LampGroup: Identifiable {
-    let id: String
-    let entries: [Entry]
-    let place: String
-    let session: String?
-}
+struct PanelStyle: Equatable {
+    var vertical = false
+    var showBackground = false
+    var showPlaceLabel = false
+    var showSessionLabel = false
 
-private enum Item: Identifiable {
-    case group(LampGroup)
-    case seam(String)
-
-    var id: String {
-        switch self {
-        case .group(let group): group.id
-        case .seam(let before): "seam-before-\(before)"
-        }
-    }
+    var showsCaptions: Bool { showPlaceLabel || showSessionLabel }
 }
 
 struct LightBar: View {
     let entries: [Entry]
-    let vertical: Bool
-    let showBackground: Bool
-    let showPlaceLabel: Bool
-    let showSessionLabel: Bool
+    let style: PanelStyle
 
     @Environment(\.panelTheme) private var theme
-
-    private var showsCaptions: Bool { showPlaceLabel || showSessionLabel }
 
     var body: some View {
         stack { content }
             .animation(.easeInOut(duration: 0.25), value: entries)
-            .padding(Theme.padding)
+            .padding(Metrics.padding)
             .background { caseBackground }
-            .padding(Theme.glowMargin)
+            .padding(Metrics.glowMargin)
             .fixedSize()
     }
 
     private func stack<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        let layout = vertical
-            ? AnyLayout(VStackLayout(spacing: Theme.spacing))
-            : AnyLayout(HStackLayout(spacing: Theme.spacing))
+        let layout = style.vertical
+            ? AnyLayout(VStackLayout(spacing: Metrics.spacing))
+            : AnyLayout(HStackLayout(spacing: Metrics.spacing))
         return layout { content() }
     }
 
     @ViewBuilder private var caseBackground: some View {
-        if showBackground, theme.finish == .glass {
+        if style.showBackground, theme.finish == .glass {
             glassCase
-        } else if showBackground {
+        } else if style.showBackground {
             ZStack {
                 Capsule(style: .continuous).fill(.ultraThinMaterial)
                 Capsule(style: .continuous).fill(theme.caseFill.opacity(0.82))
@@ -79,38 +64,10 @@ struct LightBar: View {
         }
     }
 
-    private var items: [Item] {
-        var result: [Item] = []
-        var current: [Entry] = []
-        var currentKey: String?
-
-        func flush() {
-            guard let first = current.first else { return }
-            let group: LampGroup
-            switch first {
-            case .claude(let claude):
-                group = LampGroup(id: first.groupKey, entries: current, place: claude.placeName, session: claude.group)
-            case .offline(_, let placeName, _):
-                group = LampGroup(id: first.groupKey, entries: current, place: placeName, session: nil)
-            }
-            if !result.isEmpty { result.append(.seam(group.id)) }
-            result.append(.group(group))
-            current = []
-        }
-
-        for entry in entries {
-            if let currentKey, currentKey != entry.groupKey { flush() }
-            current.append(entry)
-            currentKey = entry.groupKey
-        }
-        flush()
-        return result
-    }
-
     private func captionText(for group: LampGroup) -> String {
         var parts: [String] = []
-        if showPlaceLabel, !group.place.isEmpty { parts.append(group.place) }
-        if showSessionLabel, let session = group.session, !session.isEmpty { parts.append(session) }
+        if style.showPlaceLabel, !group.place.isEmpty { parts.append(group.place) }
+        if style.showSessionLabel, let session = group.session, !session.isEmpty { parts.append(session) }
         return parts.joined(separator: " · ")
     }
 
@@ -119,9 +76,9 @@ struct LightBar: View {
             Circle()
                 .fill(Color.gray.opacity(0.6))
                 .frame(width: 6, height: 6)
-                .frame(width: Theme.socketSize, height: Theme.socketSize)
+                .frame(width: Metrics.socketSize, height: Metrics.socketSize)
         } else {
-            ForEach(items) { item in
+            ForEach(panelItems(for: entries)) { item in
                 switch item {
                 case .group(let group): groupView(group)
                 case .seam: seam
@@ -131,40 +88,40 @@ struct LightBar: View {
     }
 
     private func groupView(_ group: LampGroup) -> some View {
-        VStack(spacing: Theme.captionGap) {
+        VStack(spacing: Metrics.captionGap) {
             stack {
                 ForEach(group.entries) { lamp($0) }
             }
-            if showsCaptions { caption(captionText(for: group)) }
+            if style.showsCaptions { caption(captionText(for: group)) }
         }
     }
 
     @ViewBuilder private func lamp(_ entry: Entry) -> some View {
         switch entry {
-        case .claude(let claude):
-            OrbView(look: Look(claude.kind), label: claude.label, tooltip: claude.tooltip)
-                .zIndex(claude.kind == .waiting ? 0 : 1)
-        case .offline(_, _, let tooltip):
-            OrbView(look: .down, label: "–", tooltip: tooltip)
+        case .claude(let placed):
+            OrbView(look: Look(placed.claude.status), label: placed.claude.label, tooltip: entry.tooltip)
+                .zIndex(placed.claude.status == .waiting ? 0 : 1)
+        case .offline:
+            OrbView(look: .down, label: "–", tooltip: entry.tooltip)
         }
     }
 
     private func caption(_ text: String) -> some View {
         Text(text.isEmpty ? " " : text)
             .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(showBackground && theme.finish == .glass ? Color.primary : .white)
+            .foregroundStyle(style.showBackground && theme.finish == .glass ? Color.primary : .white)
             .lineLimit(1)
             .padding(.horizontal, 7)
             .padding(.vertical, 2)
-            .background(Capsule().fill(.black.opacity(text.isEmpty || showBackground ? 0 : 0.55)))
+            .background(Capsule().fill(.black.opacity(text.isEmpty || style.showBackground ? 0 : 0.55)))
     }
 
     private var seam: some View {
         Capsule()
             .fill(theme.seam)
             .frame(
-                width: vertical ? Theme.seamLength : Theme.seamThickness,
-                height: vertical ? Theme.seamThickness : Theme.seamLength
+                width: style.vertical ? Metrics.seamLength : Metrics.seamThickness,
+                height: style.vertical ? Metrics.seamThickness : Metrics.seamLength
             )
     }
 }
@@ -176,29 +133,23 @@ struct PanelView: View {
     let onSize: (CGSize) -> Void
 
     var body: some View {
-        LightBar(
-            entries: hub.entries,
-            vertical: prefs.vertical,
-            showBackground: prefs.showBackground,
-            showPlaceLabel: prefs.showPlaceLabel,
-            showSessionLabel: prefs.showSessionLabel
-        )
-        .environment(\.panelTheme, PanelTheme.named(prefs.theme))
-        .onGeometryChange(for: CGSize.self) { $0.size } action: { onSize($0) }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .contentShape(Rectangle())
-        .contextMenu {
-            if prefs.places.count > 1 {
-                Menu("Show") {
-                    ForEach($prefs.places) { $place in
-                        Toggle(place.name.isEmpty ? "Untitled" : place.name, isOn: $place.enabled)
+        LightBar(entries: hub.entries, style: prefs.style)
+            .environment(\.panelTheme, PanelTheme.named(prefs.theme))
+            .onGeometryChange(for: CGSize.self) { $0.size } action: { onSize($0) }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .contentShape(Rectangle())
+            .contextMenu {
+                if prefs.places.count > 1 {
+                    Menu("Show") {
+                        ForEach($prefs.places) { $place in
+                            Toggle(place.name.isEmpty ? "Untitled" : place.name, isOn: $place.enabled)
+                        }
                     }
+                    Divider()
                 }
+                Button("Settings…", action: openSettings)
                 Divider()
+                Button("Quit") { NSApp.terminate(nil) }
             }
-            Button("Settings…", action: openSettings)
-            Divider()
-            Button("Quit") { NSApp.terminate(nil) }
-        }
     }
 }

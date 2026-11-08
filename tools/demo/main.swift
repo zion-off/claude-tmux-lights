@@ -13,11 +13,8 @@ let vm = ("vm", "VM")
 
 func lamp(_ label: String, _ status: String, _ session: String, _ place: (String, String)) -> Entry {
     let json = #"{"claudes":[{"id":"@\#(label)\#(session)","group":"\#(session)","label":"\#(label)","status":"\#(status)"}]}"#
-    var claude = parseFrame(Data(json.utf8))!.first!
-    claude.placeID = place.0
-    claude.placeName = place.1
-    claude.id = place.0 + "|" + claude.id
-    return .claude(claude)
+    let claude = parseFrame(Data(json.utf8))!.first!
+    return .claude(PlacedClaude(claude: claude, placeID: place.0, placeName: place.1))
 }
 
 struct Moment {
@@ -39,16 +36,13 @@ struct Scene: View {
     let time: Double
 
     var body: some View {
-        let phase = 0.5 + 0.5 * sin(time * 2 * .pi / Theme.pulsePeriod)
+        let phase = 0.5 + 0.5 * sin(time * 2 * .pi / Motion.pulsePeriod)
         let pulse = phase * phase * (3 - 2 * phase)
         ZStack {
             LinearGradient(colors: [Color(hex: 0x1E2026), Color(hex: 0x121317)], startPoint: .top, endPoint: .bottom)
             LightBar(
                 entries: moment.entries,
-                vertical: false,
-                showBackground: moment.glass,
-                showPlaceLabel: moment.labels,
-                showSessionLabel: moment.labels
+                style: PanelStyle(showBackground: moment.glass, showPlaceLabel: moment.labels, showSessionLabel: moment.labels)
             )
             .environment(\.pulseOverride, pulse)
             .scaleEffect(panelScale)

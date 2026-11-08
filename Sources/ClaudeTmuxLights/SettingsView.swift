@@ -93,36 +93,9 @@ struct PlacesTab: View {
 
     @ViewBuilder private var detail: some View {
         if let index = prefs.places.firstIndex(where: { $0.id == selection }) {
-            let kind = prefs.places[index].kind
-            Form {
-                TextField("Name", text: $prefs.places[index].name)
-                Picker("Where", selection: $prefs.places[index].kind) {
-                    ForEach(PlaceKind.allCases) { Text($0.title).tag($0) }
-                }
-                if kind != .local {
-                    TextField(
-                        kind == .ssh ? "Computer" : "Address",
-                        text: $prefs.places[index].address,
-                        prompt: Text(kind == .ssh ? "myserver or user@host" : "127.0.0.1:47500")
-                    )
-                    .autocorrectionDisabled()
-                    if prefs.places[index].connection == nil, !prefs.places[index].address.isEmpty {
-                        Text("That doesn't look right.").foregroundStyle(.red)
-                    }
-                }
-                Text(hint(for: kind)).font(.callout).foregroundStyle(.secondary)
-            }
-            .formStyle(.grouped)
+            PlaceForm(place: $prefs.places[index])
         } else {
             Text("Add a place with the + button.").foregroundStyle(.secondary)
-        }
-    }
-
-    private func hint(for kind: PlaceKind) -> String {
-        switch kind {
-        case .local: "Claude sessions in tmux on this Mac. There's nothing to set up."
-        case .ssh: "Logs in with your SSH keys, so it has to work without a password. The other computer needs python3 and tmux."
-        case .tcp: "For a backend you already run, such as claude_traffic.py serve."
         }
     }
 
@@ -136,5 +109,31 @@ struct PlacesTab: View {
         guard let selection, let index = prefs.places.firstIndex(where: { $0.id == selection }) else { return }
         prefs.places.remove(at: index)
         self.selection = prefs.places.first?.id
+    }
+}
+
+private struct PlaceForm: View {
+    @Binding var place: Place
+
+    var body: some View {
+        Form {
+            TextField("Name", text: $place.name)
+            Picker("Where", selection: $place.kind) {
+                ForEach(PlaceKind.allCases) { Text($0.title).tag($0) }
+            }
+            if place.kind != .local {
+                TextField(
+                    place.kind == .ssh ? "Computer" : "Address",
+                    text: $place.address,
+                    prompt: Text(place.kind == .ssh ? "myserver or user@host" : "127.0.0.1:47500")
+                )
+                .autocorrectionDisabled()
+                if place.connection == nil, !place.address.isEmpty {
+                    Text("That doesn't look right.").foregroundStyle(.red)
+                }
+            }
+            Text(place.kind.hint).font(.callout).foregroundStyle(.secondary)
+        }
+        .formStyle(.grouped)
     }
 }

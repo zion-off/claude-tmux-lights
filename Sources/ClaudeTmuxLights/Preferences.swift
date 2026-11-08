@@ -4,64 +4,50 @@ import Foundation
 final class Preferences: ObservableObject {
     static let shared = Preferences()
 
-    private let defaults = UserDefaults.standard
-
-    @Published var alwaysOnTop: Bool {
-        didSet { defaults.set(alwaysOnTop, forKey: "alwaysOnTop") }
-    }
-    @Published var vertical: Bool {
-        didSet { defaults.set(vertical, forKey: "vertical") }
-    }
-    @Published var showBackground: Bool {
-        didSet { defaults.set(showBackground, forKey: "showBackground") }
-    }
-    @Published var showPlaceLabel: Bool {
-        didSet { defaults.set(showPlaceLabel, forKey: "showPlaceLabel") }
-    }
-    @Published var showSessionLabel: Bool {
-        didSet { defaults.set(showSessionLabel, forKey: "showSessionLabel") }
-    }
-    @Published var theme: String {
-        didSet { defaults.set(theme, forKey: "theme") }
-    }
-    @Published var places: [Place] {
-        didSet { Self.save(places, to: defaults) }
+    private enum Key: String {
+        case alwaysOnTop, vertical, showBackground, showPlaceLabel, showSessionLabel, theme
     }
 
-    private init() {
+    private let defaults: UserDefaults
+
+    @Published var alwaysOnTop: Bool { didSet { save(alwaysOnTop, .alwaysOnTop) } }
+    @Published var vertical: Bool { didSet { save(vertical, .vertical) } }
+    @Published var showBackground: Bool { didSet { save(showBackground, .showBackground) } }
+    @Published var showPlaceLabel: Bool { didSet { save(showPlaceLabel, .showPlaceLabel) } }
+    @Published var showSessionLabel: Bool { didSet { save(showSessionLabel, .showSessionLabel) } }
+    @Published var theme: String { didSet { save(theme, .theme) } }
+    @Published var places: [Place] { didSet { PlacesStore.save(places, to: defaults) } }
+
+    var style: PanelStyle {
+        PanelStyle(
+            vertical: vertical,
+            showBackground: showBackground,
+            showPlaceLabel: showPlaceLabel,
+            showSessionLabel: showSessionLabel
+        )
+    }
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         defaults.register(defaults: [
-            "alwaysOnTop": true,
-            "vertical": false,
-            "showBackground": false,
-            "showPlaceLabel": false,
-            "showSessionLabel": false,
-            "theme": PanelTheme.default.id,
+            Key.alwaysOnTop.rawValue: true,
+            Key.vertical.rawValue: false,
+            Key.showBackground.rawValue: false,
+            Key.showPlaceLabel.rawValue: false,
+            Key.showSessionLabel.rawValue: false,
+            Key.theme.rawValue: PanelTheme.default.id,
         ])
-        alwaysOnTop = defaults.bool(forKey: "alwaysOnTop")
-        vertical = defaults.bool(forKey: "vertical")
-        showBackground = defaults.bool(forKey: "showBackground")
-        showPlaceLabel = defaults.bool(forKey: "showPlaceLabel")
-        showSessionLabel = defaults.bool(forKey: "showSessionLabel")
-        theme = defaults.string(forKey: "theme") ?? PanelTheme.default.id
-        places = Self.loadPlaces(defaults)
-        Self.save(places, to: defaults)
+        alwaysOnTop = defaults.bool(forKey: Key.alwaysOnTop.rawValue)
+        vertical = defaults.bool(forKey: Key.vertical.rawValue)
+        showBackground = defaults.bool(forKey: Key.showBackground.rawValue)
+        showPlaceLabel = defaults.bool(forKey: Key.showPlaceLabel.rawValue)
+        showSessionLabel = defaults.bool(forKey: Key.showSessionLabel.rawValue)
+        theme = defaults.string(forKey: Key.theme.rawValue) ?? PanelTheme.default.id
+        places = PlacesStore.load(defaults)
+        PlacesStore.save(places, to: defaults)
     }
 
-    private static func loadPlaces(_ defaults: UserDefaults) -> [Place] {
-        if let data = defaults.data(forKey: "places"), let saved = try? JSONDecoder().decode([Place].self, from: data) {
-            return saved
-        }
-        guard let old = defaults.string(forKey: "connection"), let connection = Connection(old) else {
-            return [Place.thisMac()]
-        }
-        switch connection {
-        case .local: return [Place.thisMac()]
-        case .ssh(let host): return [Place(name: host, kind: .ssh, address: host)]
-        case .tcp(let host, let port): return [Place(name: "\(host):\(port)", kind: .tcp, address: "\(host):\(port)")]
-        }
-    }
-
-    private static func save(_ places: [Place], to defaults: UserDefaults) {
-        if let data = try? JSONEncoder().encode(places) { defaults.set(data, forKey: "places") }
+    private func save(_ value: Any, _ key: Key) {
+        defaults.set(value, forKey: key.rawValue)
     }
 }

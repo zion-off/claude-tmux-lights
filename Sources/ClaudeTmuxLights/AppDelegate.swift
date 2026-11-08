@@ -5,7 +5,6 @@ import SwiftUI
 private final class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
-
 }
 
 @MainActor
@@ -13,25 +12,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let frameName = "OrbPanel"
     private static let screenMargin: CGFloat = 16
 
-    private var panel: FloatingPanel!
+    private let prefs: Preferences
+    private let hub: StreamHub
+
+    private lazy var panel: FloatingPanel = makePanel()
+    private lazy var sizer = PanelSizer(panel: panel)
     private var settingsWindow: NSWindow?
     private var subscriptions = Set<AnyCancellable>()
-    private var pendingShrink: DispatchWorkItem?
+
+    init(prefs: Preferences, hub: StreamHub) {
+        self.prefs = prefs
+        self.hub = hub
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         buildMenu()
 
+        prefs.$alwaysOnTop
+            .sink { [weak self] onTop in self?.applyLevel(onTop) }
+            .store(in: &subscriptions)
+
+        prefs.$places
+            .sink { [hub] places in hub.sync(places) }
+            .store(in: &subscriptions)
+
+        panel.orderFrontRegardless()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        hub.stopAll()
+    }
+
+    private func makePanel() -> FloatingPanel {
         let hosting = NSHostingView(rootView: PanelView(
-            hub: .shared,
-            prefs: .shared,
+            hub: hub,
+            prefs: prefs,
             openSettings: { [weak self] in self?.showSettings() },
-            onSize: { [weak self] size in Task { @MainActor in self?.resize(to: size) } }
+            onSize: { [weak self] size in Task { @MainActor in self?.sizer.resize(to: size) } }
         ))
         let size = hosting.fittingSize
         hosting.sizingOptions = []
 
-        panel = FloatingPanel(
+        let panel = FloatingPanel(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless],
             backing: .buffered,
@@ -45,22 +68,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        if !panel.setFrameUsingName(Self.frameName) { placeTopRight(size) }
+        if !panel.setFrameUsingName(Self.frameName) { placeTopRight(panel, size) }
         panel.setFrameAutosaveName(Self.frameName)
-
-        Preferences.shared.$alwaysOnTop
-            .sink { [weak self] onTop in self?.applyLevel(onTop) }
-            .store(in: &subscriptions)
-
-        Preferences.shared.$places
-            .sink { places in StreamHub.shared.sync(places) }
-            .store(in: &subscriptions)
-
-        panel.orderFrontRegardless()
-    }
-
-    func applicationWillTerminate(_ notification: Notification) {
-        StreamHub.shared.stopAll()
+        return panel
     }
 
     private func buildMenu() {
@@ -80,33 +90,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showSettings() {
-        if settingsWindow == nil { settingsWindow = makeSettingsWindow() }
+        if settingsWindow == nil { settingsWindow = SettingsWindow.make(prefs: prefs) }
         NSApp.activate()
         settingsWindow?.makeKeyAndOrderFront(nil)
-    }
-
-    private func makeSettingsWindow() -> NSWindow {
-        let tabs = NSTabViewController()
-        tabs.tabStyle = .toolbar
-        tabs.addTabViewItem(settingsTab("Places", symbol: "desktopcomputer", PlacesTab(prefs: .shared).frame(width: 600, height: 360)))
-        tabs.addTabViewItem(settingsTab("Panel", symbol: "slider.horizontal.3", PanelTab(prefs: .shared).frame(width: 600, height: 400)))
-
-        let window = NSWindow(contentViewController: tabs)
-        window.styleMask = [.titled, .closable]
-        window.toolbarStyle = .preference
-        window.isReleasedWhenClosed = false
-        window.center()
-        return window
-    }
-
-    private func settingsTab<Content: View>(_ title: String, symbol: String, _ content: Content) -> NSTabViewItem {
-        let controller = NSHostingController(rootView: content)
-        controller.sizingOptions = [.preferredContentSize]
-        controller.title = title
-        let item = NSTabViewItem(viewController: controller)
-        item.label = title
-        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
-        return item
     }
 
     private func applyLevel(_ onTop: Bool) {
@@ -114,31 +100,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if onTop { panel.orderFrontRegardless() }
     }
 
-    private func resize(to size: CGSize) {
-        pendingShrink?.cancel()
-        pendingShrink = nil
-        let current = panel.frame.size
-        guard size.width > 0, size != current else { return }
-
-        guard size.width < current.width || size.height < current.height else {
-            apply(size)
-            return
-        }
-        apply(CGSize(width: max(size.width, current.width), height: max(size.height, current.height)))
-        let shrink = DispatchWorkItem { [weak self] in self?.apply(size) }
-        pendingShrink = shrink
-        DispatchQueue.main.asyncAfter(deadline: .now() + Theme.shrinkDelay, execute: shrink)
-    }
-
-    private func apply(_ size: CGSize) {
-        guard panel.frame.size != size else { return }
-        var frame = panel.frame
-        frame.origin.y += frame.height - size.height
-        frame.size = size
-        panel.setFrame(frame, display: true)
-    }
-
-    private func placeTopRight(_ size: CGSize) {
+    private func placeTopRight(_ panel: NSPanel, _ size: CGSize) {
         guard let area = NSScreen.main?.visibleFrame else { return }
         panel.setFrameOrigin(NSPoint(
             x: area.maxX - size.width - Self.screenMargin,
