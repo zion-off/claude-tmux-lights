@@ -48,6 +48,8 @@ struct PanelTheme: Identifiable {
         case solid
         /// Translucent beads in a liquid glass capsule.
         case glass
+        /// Faceted lenses seated in chrome bezels, like pilot lights on an old control panel.
+        case jewel
     }
 
     let id: String
@@ -85,7 +87,19 @@ struct PanelTheme: Identifiable {
         seam: Color.gray.opacity(0.5)
     )
 
-    static let all = [PanelTheme.default, .glass]
+    static let jewel = PanelTheme(
+        id: "jewel",
+        name: "Jewel",
+        finish: .jewel,
+        waiting: LampPalette(top: 0xFFC24A, bottom: 0xE87C00, bloom: 0xFFA41C, haze: 0xFF7A00),
+        busy: LampPalette(top: 0x6FB4FF, bottom: 0x0B5ED7, bloom: 0x3D8BFF, haze: 0x2B55FF),
+        caseFill: Color(hex: 0x17181B),
+        unlitLens: Color(hex: 0x1E2026),
+        unlitLegend: Color(hex: 0x8A8F99),
+        seam: Color.gray.opacity(0.5)
+    )
+
+    static let all = [PanelTheme.default, .glass, .jewel]
 
     static func named(_ id: String) -> PanelTheme {
         all.first { $0.id == id } ?? .default

@@ -42,7 +42,7 @@ func falloffStops(_ color: Color) -> [Gradient.Stop] {
         .map { Gradient.Stop(color: color.opacity($0.1), location: $0.0) }
 }
 
-/// The faint halo hugging a lit rim, shared by both finishes.
+/// The faint halo hugging a lit rim, shared by every finish.
 struct RimHalo: View {
     let rim: LampPalette
 
@@ -116,6 +116,7 @@ struct OrbView: View {
         switch theme.finish {
         case .solid: SolidLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .glass: GlassBead(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
+        case .jewel: JewelLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         }
     }
 
@@ -123,6 +124,7 @@ struct OrbView: View {
         switch theme.finish {
         case .solid: SolidBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .glass: GlassBloom(look: look, lit: lit, rim: rim, pulse: pulse)
+        case .jewel: JewelBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         }
     }
 }

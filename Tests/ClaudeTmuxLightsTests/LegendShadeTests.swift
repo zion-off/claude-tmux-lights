@@ -3,7 +3,7 @@ import Testing
 @testable import ClaudeTmuxLights
 
 struct LegendShadeTests {
-    private let palettes: [(top: UInt32, bottom: UInt32)] = [(0xFFCB45, 0xFF9F0A), (0x5BAEFF, 0x0A6CFF), (0xFFCF5C, 0xFFA21A), (0x7DBBFF, 0x1F7BFF)]
+    private let palettes: [(top: UInt32, bottom: UInt32)] = [(0xFFCB45, 0xFF9F0A), (0x5BAEFF, 0x0A6CFF), (0xFFCF5C, 0xFFA21A), (0x7DBBFF, 0x1F7BFF), (0xFFC24A, 0xE87C00), (0x6FB4FF, 0x0B5ED7)]
 
     @Test func numeralsReadAgainstTheirLens() {
         for palette in palettes {
@@ -31,6 +31,7 @@ struct PanelThemeTests {
     @Test func unknownThemeFallsBackToDefault() {
         #expect(PanelTheme.named("nope").id == PanelTheme.default.id)
         #expect(PanelTheme.named("glass").finish == .glass)
+        #expect(PanelTheme.named("jewel").finish == .jewel)
     }
 
     @Test func themeIDsAreUnique() {
