@@ -6,6 +6,7 @@
     <key>CFBundleName</key><string>Claude Tmux Lights</string>
     <key>CFBundleExecutable</key><string>ClaudeTmuxLights</string>
     <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleShortVersionString</key><string>0.1</string>
     <key>LSMinimumSystemVersion</key><string>15.0</string>
     <key>LSUIElement</key><true/>
