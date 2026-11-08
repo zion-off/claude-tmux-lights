@@ -137,9 +137,9 @@ struct SignalLens: View {
             hood
                 .stroke(
                     LinearGradient(colors: [Color(hex: 0x4A4B47), Color(hex: 0x1E1E1D)], startPoint: .top, endPoint: .bottom),
-                    style: StrokeStyle(lineWidth: 2.4, lineCap: .round)
+                    style: StrokeStyle(lineWidth: 1.1, lineCap: .round)
                 )
-                .padding(1.2)
+                .padding(0.55)
                 .offset(y: -Signal.hoodLift)
             hood
                 .stroke(
