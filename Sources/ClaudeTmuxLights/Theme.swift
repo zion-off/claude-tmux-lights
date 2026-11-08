@@ -52,6 +52,12 @@ struct PanelTheme: Identifiable {
         case jewel
         /// Ridged glass lenses under visors in signal housings, mounted on a backplate.
         case signal
+        /// Concave caps of frosted plastic, each lit by one LED, on a control panel.
+        case frosted
+
+        /// Whether a shell-only wait dimly lights the whole lens rather than just its rim. The numeral
+        /// then sits on a lit lens, so it takes the lit style.
+        var shellLightsLens: Bool { self == .frosted }
     }
 
     let id: String
@@ -113,7 +119,20 @@ struct PanelTheme: Identifiable {
         seam: Color.gray.opacity(0.5)
     )
 
-    static let all = [PanelTheme.default, .glass, .jewel, .signal]
+    // Idle buttons are smoky clear plastic.
+    static let frosted = PanelTheme(
+        id: "frosted",
+        name: "Frosted",
+        finish: .frosted,
+        waiting: LampPalette(top: 0xFFC44F, bottom: 0xF58A00, bloom: 0xFFA41C, haze: 0xFF7A00),
+        busy: LampPalette(top: 0x72B8FF, bottom: 0x1166EE, bloom: 0x3D8BFF, haze: 0x2B55FF),
+        caseFill: Color(hex: 0x121216),
+        unlitLens: Color(hex: 0x24252B),
+        unlitLegend: Color(hex: 0x9096A0),
+        seam: Color.gray.opacity(0.5)
+    )
+
+    static let all = [PanelTheme.default, .glass, .jewel, .signal, .frosted]
 
     static func named(_ id: String) -> PanelTheme {
         all.first { $0.id == id } ?? .default

@@ -37,6 +37,7 @@ struct LightBar: View {
             switch theme.finish {
             case .glass: glassCase
             case .signal: SignalBackplate()
+            case .frosted: FrostedPanel()
             case .solid, .jewel: solidCase
             }
         } else {

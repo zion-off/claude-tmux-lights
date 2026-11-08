@@ -87,7 +87,9 @@ struct OrbView: View {
 
     private var lit: LampPalette? { theme.lamp(for: look) }
     private var rim: LampPalette? { theme.rim(for: look) }
-    private var legendColor: Color { lit?.legend ?? rim?.top ?? theme.unlitLegend }
+    /// The palette the numeral sits on, if its lens is lit at all.
+    private var glow: LampPalette? { lit ?? (theme.finish.shellLightsLens ? rim : nil) }
+    private var legendColor: Color { glow?.legend ?? rim?.top ?? theme.unlitLegend }
 
     private static let restingPulse = 0.8
 
@@ -108,8 +110,8 @@ struct OrbView: View {
             Text(label)
                 .font(.system(size: 14, weight: .bold, design: .monospaced))
                 .foregroundStyle(legendColor)
-                .shadow(color: lit == nil ? .clear : legendColor.opacity(0.35), radius: 0.4, y: -0.5)
-                .shadow(color: lit == nil ? .clear : .white.opacity(0.32), radius: 0.8, y: 0.9)
+                .shadow(color: glow == nil ? .clear : legendColor.opacity(0.35), radius: 0.4, y: -0.5)
+                .shadow(color: glow == nil ? .clear : .white.opacity(0.32), radius: 0.8, y: 0.9)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
                 .frame(width: Metrics.lampSize - 6)
@@ -124,6 +126,7 @@ struct OrbView: View {
         case .glass: GlassBead(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .jewel: JewelLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .signal: SignalLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
+        case .frosted: FrostedButton(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         }
     }
 
@@ -133,6 +136,7 @@ struct OrbView: View {
         case .glass: GlassBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .jewel: JewelBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .signal: SignalBloom(look: look, lit: lit, rim: rim, pulse: pulse)
+        case .frosted: FrostedBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         }
     }
 }
