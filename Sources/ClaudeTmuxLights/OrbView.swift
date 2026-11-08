@@ -1,12 +1,13 @@
 import SwiftUI
 
 enum Look {
-    case waiting, busy, idle, unknown, down
+    case waiting, busy, shell, idle, unknown, down
 
     init(_ status: Status) {
         switch status {
         case .waiting: self = .waiting
         case .busy: self = .busy
+        case .shell: self = .shell
         case .idle: self = .idle
         case .unknown: self = .unknown
         }
@@ -41,6 +42,34 @@ func falloffStops(_ color: Color) -> [Gradient.Stop] {
         .map { Gradient.Stop(color: color.opacity($0.1), location: $0.0) }
 }
 
+/// The faint halo hugging a lit rim, shared by both finishes.
+struct RimHalo: View {
+    let rim: LampPalette
+
+    private let diameter = Metrics.lampSize
+    private let reach: CGFloat = 8
+
+    var body: some View {
+        let radius = diameter / 2 + reach
+        Circle()
+            .fill(RadialGradient(stops: falloffStops(rim.bloom), center: .center, startRadius: diameter / 2, endRadius: radius))
+            .frame(width: radius * 2, height: radius * 2)
+            .opacity(0.35)
+    }
+}
+
+/// A rim's light bleeding a little way into the dark lens.
+struct RimSpill: View {
+    let rim: LampPalette
+
+    var body: some View {
+        Circle()
+            .strokeBorder(rim.bloom.opacity(0.35), lineWidth: 5)
+            .blur(radius: 2.5)
+            .clipShape(Circle())
+    }
+}
+
 struct OrbView: View {
     let look: Look
     let label: String
@@ -51,7 +80,8 @@ struct OrbView: View {
     @Environment(\.panelTheme) private var theme
 
     private var lit: LampPalette? { theme.lamp(for: look) }
-    private var legendColor: Color { lit?.legend ?? theme.unlitLegend }
+    private var rim: LampPalette? { theme.rim(for: look) }
+    private var legendColor: Color { lit?.legend ?? rim?.top ?? theme.unlitLegend }
 
     private static let restingPulse = 0.8
 
@@ -84,15 +114,15 @@ struct OrbView: View {
 
     @ViewBuilder private func lens(pulse: Double) -> some View {
         switch theme.finish {
-        case .solid: SolidLens(look: look, lit: lit, theme: theme, pulse: pulse)
-        case .glass: GlassBead(look: look, lit: lit, theme: theme, pulse: pulse)
+        case .solid: SolidLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
+        case .glass: GlassBead(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         }
     }
 
     @ViewBuilder private func bloom(pulse: Double) -> some View {
         switch theme.finish {
-        case .solid: SolidBloom(look: look, lit: lit, pulse: pulse)
-        case .glass: GlassBloom(look: look, lit: lit, pulse: pulse)
+        case .solid: SolidBloom(look: look, lit: lit, rim: rim, pulse: pulse)
+        case .glass: GlassBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         }
     }
 }

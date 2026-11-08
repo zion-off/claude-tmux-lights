@@ -77,6 +77,10 @@ time.sleep(STEP)
 set_state([entry("work", "idle", 1), entry("work", "waiting", 2), entry("work", "busy", 3)], "window 2 waiting")
 time.sleep(STEP)
 
+set_state([entry("work", "idle", 1), entry("work", "waiting", 2), entry("work", "shell", 3)],
+          "window 3 only running a shell command")
+time.sleep(STEP)
+
 broadcast(b"not json\n")
 set_state([entry("work", "waiting", 2), entry("work", "busy", 3), entry("x", "frobnicating", 4)],
           "window 1 closed, window 4 has an unknown status")

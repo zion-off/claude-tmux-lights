@@ -14,6 +14,11 @@ struct ModelTests {
         #expect(claude.status == .busy)
     }
 
+    @Test func decodesShellStatus() throws {
+        let claudes = try #require(parseFrame(frame(#"{"id":"a","label":"1","group":"g","status":"shell"}"#)))
+        #expect(claudes.first?.status == .shell)
+    }
+
     @Test func unknownStatusFallsBackToUnknown() throws {
         let claudes = try #require(parseFrame(frame(#"{"id":"a","label":"1","group":"g","status":"asleep"}"#)))
         #expect(claudes.first?.status == .unknown)

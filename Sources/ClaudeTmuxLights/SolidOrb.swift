@@ -3,6 +3,7 @@ import SwiftUI
 struct SolidBloom: View {
     let look: Look
     let lit: LampPalette?
+    let rim: LampPalette?
     let pulse: Double
 
     private let diameter = Metrics.lampSize
@@ -28,6 +29,8 @@ struct SolidBloom: View {
                     .frame(width: tight * 2, height: tight * 2)
                     .opacity(tightOpacity.value(waiting: waiting, pulse: pulse))
             }
+        } else if let rim {
+            RimHalo(rim: rim)
         }
     }
 }
@@ -35,6 +38,7 @@ struct SolidBloom: View {
 struct SolidLens: View {
     let look: Look
     let lit: LampPalette?
+    let rim: LampPalette?
     let theme: PanelTheme
     let pulse: Double
 
@@ -57,13 +61,20 @@ struct SolidLens: View {
             Circle()
                 .fill(theme.unlitLens)
                 .overlay(Circle().fill(LinearGradient(colors: [.white.opacity(0.07), .clear], startPoint: .top, endPoint: .center)))
-                .overlay(
-                    Circle().strokeBorder(
-                        look == .unknown ? theme.unlitLegend.opacity(0.8) : .white.opacity(0.28),
-                        style: StrokeStyle(lineWidth: 1.2, dash: look == .unknown ? [2.5, 2.5] : [])
-                    )
-                )
+                .overlay { edge }
                 .frame(width: diameter, height: diameter)
+        }
+    }
+
+    @ViewBuilder private var edge: some View {
+        if let rim {
+            RimSpill(rim: rim)
+            Circle().strokeBorder(LinearGradient(colors: [rim.top, rim.bottom], startPoint: .top, endPoint: .bottom), lineWidth: 2)
+        } else {
+            Circle().strokeBorder(
+                look == .unknown ? theme.unlitLegend.opacity(0.8) : .white.opacity(0.28),
+                style: StrokeStyle(lineWidth: 1.2, dash: look == .unknown ? [2.5, 2.5] : [])
+            )
         }
     }
 }

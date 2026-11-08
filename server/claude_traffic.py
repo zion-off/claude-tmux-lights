@@ -30,8 +30,9 @@ DEFAULT_INTERVAL_SECONDS = 1.0
 HEARTBEAT_SECONDS = 15.0
 CLIENT_WRITE_TIMEOUT_SECONDS = 2.0
 
-STATUS_RANK = {"idle": 1, "busy": 2, "waiting": 3}
-STATUS_COLORS = {"waiting": "#ffb000", "busy": "#4a90e2", "idle": "#808080"}
+# "shell" means Claude has stopped and only a background shell command is still running.
+STATUS_RANK = {"idle": 1, "shell": 2, "busy": 3, "waiting": 4}
+STATUS_COLORS = {"waiting": "#ffb000", "busy": "#4a90e2", "shell": "#2f5f99", "idle": "#808080"}
 UNKNOWN_STATUS_COLOR = "#c6c6c6"
 
 logger = logging.getLogger("claude_traffic")

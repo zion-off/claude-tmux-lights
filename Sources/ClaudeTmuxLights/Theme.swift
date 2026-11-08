@@ -95,8 +95,14 @@ struct PanelTheme: Identifiable {
         switch look {
         case .waiting: waiting
         case .busy: busy
-        case .idle, .unknown, .down: nil
+        case .shell, .idle, .unknown, .down: nil
         }
+    }
+
+    /// A lamp whose lens stays dark but whose rim lights up. A shell-only wait borrows the busy hue,
+    /// so it reads as a quieter cousin of busy.
+    func rim(for look: Look) -> LampPalette? {
+        look == .shell ? busy : nil
     }
 }
 

@@ -1,7 +1,8 @@
 import Foundation
 
 enum Status: String {
-    case busy, waiting, idle, unknown
+    /// `shell`: Claude has stopped and only a background shell command is still running.
+    case busy, waiting, shell, idle, unknown
 }
 
 struct Claude: Decodable, Identifiable, Equatable {

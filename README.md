@@ -8,6 +8,7 @@ A floating macOS panel with one lamp per Claude Code session running in tmux.
 | --- | --- |
 | Amber, pulsing | Waiting for you |
 | Blue | Busy |
+| Blue ring | Only a background shell command is running |
 | Dark | Idle |
 | Dashed ring | Unknown status |
 | Dimmed `–` | Place not connected (see [Troubleshooting](#troubleshooting)) |
@@ -63,7 +64,7 @@ A place that drops shows a dimmed `–` and reconnects by itself every 3 seconds
 {"v": 1, "claudes": [{"id": "@4", "group": "work", "label": "1", "status": "waiting"}]}
 ```
 
-`group` is the tmux session, `label` is the lamp text, and `status` is `busy`, `waiting` or `idle`. Any TCP port serving such lines works as **A running service**.
+`group` is the tmux session, `label` is the lamp text, and `status` is `busy`, `waiting`, `shell` (Claude has stopped and only a background shell command is running) or `idle`. Any TCP port serving such lines works as **A running service**.
 
 ## Limitations
 

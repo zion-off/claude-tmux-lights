@@ -3,6 +3,7 @@ import SwiftUI
 struct GlassBloom: View {
     let look: Look
     let lit: LampPalette?
+    let rim: LampPalette?
     let pulse: Double
 
     private let diameter = Metrics.lampSize
@@ -18,6 +19,8 @@ struct GlassBloom: View {
                 .frame(width: radius * 2, height: radius * 2)
                 .offset(y: 1)
                 .opacity(opacity.value(waiting: waiting, pulse: pulse))
+        } else if let rim {
+            RimHalo(rim: rim)
         }
     }
 }
@@ -25,6 +28,7 @@ struct GlassBloom: View {
 struct GlassBead: View {
     let look: Look
     let lit: LampPalette?
+    let rim: LampPalette?
     let theme: PanelTheme
     let pulse: Double
 
@@ -67,7 +71,7 @@ struct GlassBead: View {
         }
         .clipShape(shape)
         .background { beadBase }
-        .overlay { rim }
+        .overlay { rimStroke }
         .overlay { specular }
         .frame(width: diameter, height: diameter)
         .background {
@@ -108,7 +112,19 @@ struct GlassBead: View {
             .offset(y: -diameter * 0.3)
     }
 
-    private var rim: some View {
+    @ViewBuilder private var rimStroke: some View {
+        if let rim {
+            ZStack {
+                RimSpill(rim: rim)
+                Circle().strokeBorder(LinearGradient(colors: [rim.top, rim.bottom], startPoint: .top, endPoint: .bottom), lineWidth: 1.8)
+                Circle().strokeBorder(.black.opacity(0.22), lineWidth: 0.5)
+            }
+        } else {
+            glassRim
+        }
+    }
+
+    private var glassRim: some View {
         ZStack {
             Circle().strokeBorder(
                 LinearGradient(
