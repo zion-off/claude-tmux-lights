@@ -40,9 +40,7 @@ struct JewelLens: View {
     let theme: PanelTheme
     let pulse: Double
 
-    /// How hard the bulb is burning: it swells and fades while waiting, and holds steady otherwise.
-    /// It never drops below a third, so the lamp still reads as lit at the bottom of the pulse.
-    private var breath: Double { look == .waiting ? 0.35 + 0.65 * pulse : 0.8 }
+    private var breath: Double { burn(look, pulse: pulse) }
 
     var body: some View {
         ZStack {

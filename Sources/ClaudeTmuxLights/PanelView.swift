@@ -33,23 +33,27 @@ struct LightBar: View {
     }
 
     @ViewBuilder private var caseBackground: some View {
-        if style.showBackground, theme.finish == .glass {
-            glassCase
-        } else if style.showBackground, theme.finish == .signal {
-            SignalBackplate()
-        } else if style.showBackground {
-            ZStack {
-                Capsule(style: .continuous).fill(.ultraThinMaterial)
-                Capsule(style: .continuous).fill(theme.caseFill.opacity(0.82))
-                Capsule(style: .continuous).strokeBorder(
-                    LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom),
-                    lineWidth: 1
-                )
+        if style.showBackground {
+            switch theme.finish {
+            case .glass: glassCase
+            case .signal: SignalBackplate()
+            case .solid, .jewel: solidCase
             }
-            .environment(\.colorScheme, .dark)
         } else {
             Capsule(style: .continuous).fill(Color.black.opacity(0.01))
         }
+    }
+
+    private var solidCase: some View {
+        ZStack {
+            Capsule(style: .continuous).fill(.ultraThinMaterial)
+            Capsule(style: .continuous).fill(theme.caseFill.opacity(0.82))
+            Capsule(style: .continuous).strokeBorder(
+                LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom),
+                lineWidth: 1
+            )
+        }
+        .environment(\.colorScheme, .dark)
     }
 
     @ViewBuilder private var glassCase: some View {

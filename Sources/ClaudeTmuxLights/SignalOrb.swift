@@ -44,9 +44,7 @@ struct SignalLens: View {
     let theme: PanelTheme
     let pulse: Double
 
-    /// How hard the bulb is burning: it swells and fades while waiting, and holds steady otherwise.
-    /// It never drops below a third, so the lamp still reads as lit at the bottom of the pulse.
-    private var breath: Double { look == .waiting ? 0.35 + 0.65 * pulse : 0.8 }
+    private var breath: Double { burn(look, pulse: pulse) }
 
     var body: some View {
         ZStack {
@@ -287,10 +285,13 @@ private struct Screw: View {
 }
 
 /// Fine speckles of light and dark, scattered the same way every time so they never shimmer.
-private struct Grain: View {
+struct Grain: View {
     let seed: UInt64
     let count: Int
     var tone: Color? = nil
+    var light = 0.05
+    var dark = 0.25
+    var size: CGFloat = 0.5
 
     var body: some View {
         Canvas { context, size in
@@ -300,8 +301,9 @@ private struct Grain: View {
                 return CGFloat(state >> 33) / CGFloat(UInt32.max >> 1)
             }
             for index in 0..<count {
-                let rect = CGRect(x: next() * size.width, y: next() * size.height, width: 0.5 + next() * 0.6, height: 0.5 + next() * 0.6)
-                let color = tone.map { $0.opacity(0.35) } ?? (index.isMultiple(of: 2) ? Color.white.opacity(0.05) : Color.black.opacity(0.25))
+                let speck = self.size + next() * self.size * 1.2
+                let rect = CGRect(x: next() * size.width, y: next() * size.height, width: speck, height: speck)
+                let color = tone.map { $0.opacity(0.35) } ?? (index.isMultiple(of: 2) ? Color.white.opacity(light) : Color.black.opacity(dark))
                 context.fill(Path(ellipseIn: rect), with: .color(color))
             }
         }

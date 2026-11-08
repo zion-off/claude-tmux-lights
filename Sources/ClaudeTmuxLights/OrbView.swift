@@ -37,6 +37,12 @@ struct Throb {
     }
 }
 
+/// How hard a lamp lit from within is burning: it swells and fades while waiting, and holds steady
+/// otherwise. It never drops below a third, so the lamp still reads as lit at the bottom of the pulse.
+func burn(_ look: Look, pulse: Double) -> Double {
+    look == .waiting ? 0.35 + 0.65 * pulse : 0.8
+}
+
 func falloffStops(_ color: Color) -> [Gradient.Stop] {
     [(0.0, 0.95), (0.2, 0.6), (0.4, 0.3), (0.6, 0.13), (0.8, 0.04), (1.0, 0.0)]
         .map { Gradient.Stop(color: color.opacity($0.1), location: $0.0) }
