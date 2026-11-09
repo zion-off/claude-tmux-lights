@@ -5,7 +5,7 @@ final class Preferences: ObservableObject {
     static let shared = Preferences()
 
     private enum Key: String {
-        case alwaysOnTop, vertical, showBackground, showPlaceLabel, showSessionLabel, theme
+        case alwaysOnTop, vertical, showBackground, showPlaceLabel, showSessionLabel, theme, attentionBurst
     }
 
     private let defaults: UserDefaults
@@ -15,6 +15,7 @@ final class Preferences: ObservableObject {
     @Published var showBackground: Bool { didSet { save(showBackground, .showBackground) } }
     @Published var showPlaceLabel: Bool { didSet { save(showPlaceLabel, .showPlaceLabel) } }
     @Published var showSessionLabel: Bool { didSet { save(showSessionLabel, .showSessionLabel) } }
+    @Published var attentionBurst: Bool { didSet { save(attentionBurst, .attentionBurst) } }
     @Published var theme: String { didSet { save(theme, .theme) } }
     @Published var places: [Place] { didSet { PlacesStore.save(places, to: defaults) } }
 
@@ -35,6 +36,7 @@ final class Preferences: ObservableObject {
             Key.showBackground.rawValue: false,
             Key.showPlaceLabel.rawValue: false,
             Key.showSessionLabel.rawValue: false,
+            Key.attentionBurst.rawValue: false,
             Key.theme.rawValue: PanelTheme.default.id,
         ])
         alwaysOnTop = defaults.bool(forKey: Key.alwaysOnTop.rawValue)
@@ -42,6 +44,7 @@ final class Preferences: ObservableObject {
         showBackground = defaults.bool(forKey: Key.showBackground.rawValue)
         showPlaceLabel = defaults.bool(forKey: Key.showPlaceLabel.rawValue)
         showSessionLabel = defaults.bool(forKey: Key.showSessionLabel.rawValue)
+        attentionBurst = defaults.bool(forKey: Key.attentionBurst.rawValue)
         theme = defaults.string(forKey: Key.theme.rawValue) ?? PanelTheme.default.id
         places = PlacesStore.load(defaults)
         PlacesStore.save(places, to: defaults)

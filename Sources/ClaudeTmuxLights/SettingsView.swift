@@ -36,6 +36,12 @@ struct PanelTab: View {
             Section("General") {
                 LoginItemToggle()
             }
+            Section("Alerts") {
+                Toggle("Flash a lamp when its Claude starts waiting", isOn: $prefs.attentionBurst)
+                Text("A brief burst that fires once, in the style of the current theme, so a waiting lamp is hard to miss. Skipped when Reduce Motion is on.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
             Section("Layout") {
                 Picker("Theme", selection: $prefs.theme) {
                     ForEach(PanelTheme.all) { Text($0.name).tag($0.id) }

@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [hub] places in hub.sync(places) }
             .store(in: &subscriptions)
 
+        BurstOverlay.shared.anchor = panel
         panel.orderFrontRegardless()
     }
 

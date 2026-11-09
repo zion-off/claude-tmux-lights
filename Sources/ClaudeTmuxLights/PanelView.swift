@@ -142,6 +142,7 @@ struct PanelView: View {
     var body: some View {
         LightBar(entries: hub.entries, style: prefs.style)
             .environment(\.panelTheme, PanelTheme.named(prefs.theme))
+            .environment(\.attentionBurst, prefs.attentionBurst)
             .onGeometryChange(for: CGSize.self) { $0.size } action: { onSize($0) }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .contentShape(Rectangle())

@@ -1,9 +1,8 @@
 import SwiftUI
 
 /// Sizes for an illuminated push button: a concave cap of frosted plastic over a single LED.
-private enum Frosted {
+enum Frosted {
     static let cap = Metrics.socketSize - 3
-    static let moldingColor = Color(hex: 0xD3242B)
 }
 
 struct FrostedBloom: View {
@@ -11,6 +10,7 @@ struct FrostedBloom: View {
     let lit: LampPalette?
     let rim: LampPalette?
     let pulse: Double
+    var burst: Double?
 
     // The plastic is translucent, so some light leaks onto the panel, but most of it stays in the cap.
     private let reach = Throb(steady: 24, base: 23, swing: 4)
@@ -23,7 +23,35 @@ struct FrostedBloom: View {
             Circle()
                 .fill(RadialGradient(stops: falloffStops(lit.bloom), center: .center, startRadius: Frosted.cap * 0.42, endRadius: radius))
                 .frame(width: radius * 2, height: radius * 2)
-                .opacity(opacity.value(waiting: waiting, pulse: pulse))
+                .opacity(min(1, opacity.value(waiting: waiting, pulse: pulse) + 0.4 * Burst.flash(burst)))
+        }
+    }
+}
+
+/// Three rings of light leaving a cap one after the other, like a ripple on still water. Drawn by the
+/// screen-wide overlay, so `maxRadius` can be as large as the display allows.
+struct FrostedRipple: View {
+    let color: Color
+    let progress: Double
+    let maxRadius: CGFloat
+
+    var body: some View {
+        ring(progress)
+        ring((progress - 0.14) / 0.86)
+        ring((progress - 0.28) / 0.72)
+    }
+
+    @ViewBuilder private func ring(_ p: Double) -> some View {
+        if p > 0, p < 1 {
+            let eased = 1 - pow(1 - p, 2.2)
+            let fade = pow(1 - p, 1.3)
+            let diameter = max(Frosted.cap, 2 * maxRadius * eased)
+            ZStack {
+                Circle().strokeBorder(color.opacity(0.9 * fade), lineWidth: 14 * (1 - p) + 2)
+                    .blur(radius: 5 * (1 - p) + 1)
+                Circle().strokeBorder(.white.opacity(0.35 * fade), lineWidth: 2.5 * (1 - p) + 0.6)
+            }
+            .frame(width: diameter, height: diameter)
         }
     }
 }
@@ -34,10 +62,11 @@ struct FrostedButton: View {
     let rim: LampPalette?
     let theme: PanelTheme
     let pulse: Double
+    var burst: Double?
 
     /// How hard the LED is burning. A shell-only wait runs it dimly in the busy color, with no ring to light.
     private var led: (palette: LampPalette, power: Double)? {
-        if let lit { return (lit, burn(look, pulse: pulse)) }
+        if let lit { return (lit, min(1, max(burn(look, pulse: pulse), Burst.flash(burst)))) }
         if let rim { return (rim, 0.12) }
         return nil
     }
@@ -119,9 +148,8 @@ struct FrostedButton: View {
     }
 }
 
-/// An arcade control panel: dark textured laminate edged with glossy rubber T-molding.
+/// A control panel: a dark textured laminate plate with a fine chamfered edge, like machined plastic.
 struct FrostedPanel: View {
-    private let molding: CGFloat = 4
     private let cornerRadius: CGFloat = 8
 
     var body: some View {
@@ -130,18 +158,12 @@ struct FrostedPanel: View {
             shape.fill(Color(hex: 0x121216))
             shape.fill(LinearGradient(colors: [.white.opacity(0.06), .clear, .black.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
             Grain(seed: 19, count: 1100).clipShape(shape)
-            // The molding is rounded, so it catches light along its top and shades along its bottom.
-            shape.strokeBorder(Frosted.moldingColor, lineWidth: molding)
+            // The chamfer catches light along its top edge and falls into shade along its bottom.
             shape.strokeBorder(
-                LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.05), .black.opacity(0.35)], startPoint: .top, endPoint: .bottom),
-                lineWidth: molding
+                LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.04), .black.opacity(0.4)], startPoint: .top, endPoint: .bottom),
+                lineWidth: 1.2
             )
-            .blendMode(.overlay)
-            shape.inset(by: molding * 0.3)
-                .strokeBorder(.white.opacity(0.35), lineWidth: 0.5)
-                .blur(radius: 0.2)
-            shape.strokeBorder(.black.opacity(0.5), lineWidth: 0.5)
-            shape.inset(by: molding).strokeBorder(.black.opacity(0.6), lineWidth: 0.6)
+            shape.strokeBorder(.black.opacity(0.55), lineWidth: 0.5)
         }
     }
 }

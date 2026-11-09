@@ -10,7 +10,6 @@ enum Signal {
     /// We look up at a signal, so the hood's open end shows above where it meets the housing.
     static let hoodLift: CGFloat = 1.5
     static let housingColor = Color(hex: 0x1C1D1B)
-    static let backplateBorder = Color(hex: 0xF2C200)
 }
 
 struct SignalBloom: View {
@@ -231,9 +230,8 @@ struct SignalLens: View {
     }
 }
 
-/// The black backplate signals are mounted on, edged with a yellow reflective stripe.
+/// The matte black backplate signals are mounted on, with a plain folded edge and a bolt in each corner.
 struct SignalBackplate: View {
-    private let stripe: CGFloat = 2.2
     private let cornerRadius: CGFloat = 10
 
     var body: some View {
@@ -241,11 +239,12 @@ struct SignalBackplate: View {
         ZStack {
             shape.fill(Color(hex: 0x0B0B0B))
             Grain(seed: 11, count: 900).clipShape(shape)
-            shape.strokeBorder(Signal.backplateBorder, lineWidth: stripe)
-            // Reflective sheeting has a fine prismatic weave.
-            Hatch(cornerRadius: cornerRadius, width: stripe)
-            shape.strokeBorder(.black.opacity(0.5), lineWidth: 0.5)
-            shape.inset(by: stripe).strokeBorder(.black.opacity(0.4), lineWidth: 0.5)
+            // The plate's folded lip catches a little light on top and falls into shade below.
+            shape.strokeBorder(
+                LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.03), .black.opacity(0.5)], startPoint: .top, endPoint: .bottom),
+                lineWidth: 1.2
+            )
+            shape.strokeBorder(.black.opacity(0.6), lineWidth: 0.5)
             GeometryReader { proxy in
                 let inset: CGFloat = 6
                 ForEach(0..<4, id: \.self) { index in
@@ -308,29 +307,5 @@ struct Grain: View {
             }
         }
         .allowsHitTesting(false)
-    }
-}
-
-/// Diagonal lines for the reflective stripe's texture, drawn only within the stripe.
-private struct Hatch: View {
-    let cornerRadius: CGFloat
-    let width: CGFloat
-
-    var body: some View {
-        Canvas { context, size in
-            let bounds = CGRect(origin: .zero, size: size)
-            var band = Path(roundedRect: bounds, cornerRadius: cornerRadius, style: .continuous)
-            band.addPath(Path(roundedRect: bounds.insetBy(dx: width, dy: width), cornerRadius: cornerRadius - width, style: .continuous))
-            context.clip(to: band, style: FillStyle(eoFill: true))
-            var x: CGFloat = -size.height
-            while x < size.width {
-                var line = Path()
-                line.move(to: CGPoint(x: x, y: size.height))
-                line.addLine(to: CGPoint(x: x + size.height, y: 0))
-                context.stroke(line, with: .color(.white.opacity(0.28)), lineWidth: 0.35)
-                context.stroke(line.offsetBy(dx: 0.8, dy: 0), with: .color(.black.opacity(0.18)), lineWidth: 0.35)
-                x += 1.8
-            }
-        }
     }
 }
