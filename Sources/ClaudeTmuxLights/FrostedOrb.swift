@@ -34,11 +34,14 @@ struct FrostedRipple: View {
     let color: Color
     let progress: Double
     let maxRadius: CGFloat
+    var gentle = false
 
     var body: some View {
         ring(progress)
-        ring((progress - 0.14) / 0.86)
-        ring((progress - 0.28) / 0.72)
+        if !gentle {
+            ring((progress - 0.14) / 0.86)
+            ring((progress - 0.28) / 0.72)
+        }
     }
 
     @ViewBuilder private func ring(_ p: Double) -> some View {

@@ -5,7 +5,7 @@ final class Preferences: ObservableObject {
     static let shared = Preferences()
 
     private enum Key: String {
-        case alwaysOnTop, vertical, showBackground, showPlaceLabel, showSessionLabel, theme, attentionBurst
+        case alwaysOnTop, vertical, showBackground, showPlaceLabel, showSessionLabel, theme, attentionBurst, finishBurst, finishMinimum
     }
 
     private let defaults: UserDefaults
@@ -16,6 +16,8 @@ final class Preferences: ObservableObject {
     @Published var showPlaceLabel: Bool { didSet { save(showPlaceLabel, .showPlaceLabel) } }
     @Published var showSessionLabel: Bool { didSet { save(showSessionLabel, .showSessionLabel) } }
     @Published var attentionBurst: Bool { didSet { save(attentionBurst, .attentionBurst) } }
+    @Published var finishBurst: Bool { didSet { save(finishBurst, .finishBurst) } }
+    @Published var finishMinimum: Double { didSet { save(finishMinimum, .finishMinimum) } }
     @Published var theme: String { didSet { save(theme, .theme) } }
     @Published var places: [Place] { didSet { PlacesStore.save(places, to: defaults) } }
 
@@ -37,6 +39,8 @@ final class Preferences: ObservableObject {
             Key.showPlaceLabel.rawValue: false,
             Key.showSessionLabel.rawValue: false,
             Key.attentionBurst.rawValue: false,
+            Key.finishBurst.rawValue: false,
+            Key.finishMinimum.rawValue: 10.0,
             Key.theme.rawValue: PanelTheme.default.id,
         ])
         alwaysOnTop = defaults.bool(forKey: Key.alwaysOnTop.rawValue)
@@ -45,6 +49,8 @@ final class Preferences: ObservableObject {
         showPlaceLabel = defaults.bool(forKey: Key.showPlaceLabel.rawValue)
         showSessionLabel = defaults.bool(forKey: Key.showSessionLabel.rawValue)
         attentionBurst = defaults.bool(forKey: Key.attentionBurst.rawValue)
+        finishBurst = defaults.bool(forKey: Key.finishBurst.rawValue)
+        finishMinimum = defaults.double(forKey: Key.finishMinimum.rawValue)
         theme = defaults.string(forKey: Key.theme.rawValue) ?? PanelTheme.default.id
         places = PlacesStore.load(defaults)
         PlacesStore.save(places, to: defaults)

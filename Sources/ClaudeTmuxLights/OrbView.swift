@@ -38,8 +38,42 @@ extension EnvironmentValues {
     }
 }
 
+/// Whether a lamp also flashes, more gently, when its Claude finishes. Set from the preferences.
+private struct FinishBurstKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var finishBurst: Bool {
+        get { self[FinishBurstKey.self] }
+        set { self[FinishBurstKey.self] = newValue }
+    }
+}
+
+/// How long a Claude must have worked for its finish to be worth a flash. Set from the preferences.
+private struct FinishMinimumKey: EnvironmentKey {
+    static let defaultValue: TimeInterval = 10
+}
+
+extension EnvironmentValues {
+    var finishMinimum: TimeInterval {
+        get { self[FinishMinimumKey.self] }
+        set { self[FinishMinimumKey.self] = newValue }
+    }
+}
+
+/// The two moments a burst can mark.
+enum BurstKind {
+    /// A Claude needs you.
+    case waiting
+    /// A Claude has finished and is ready for your next prompt.
+    case finished
+
+    var duration: Double { self == .waiting ? 2.4 : 3.0 }
+}
+
 enum Burst {
-    static let duration = 2.4
+    static let duration = BurstKind.waiting.duration
 
     /// How far through the burst a lamp is, from 0 to 1, or nil when none is playing.
     static func progress(since start: Date?, at now: Date) -> Double? {
@@ -114,9 +148,12 @@ struct OrbView: View {
     @Environment(\.pulseOverride) private var pulseOverride
     @Environment(\.panelTheme) private var theme
     @Environment(\.attentionBurst) private var burstEnabled
+    @Environment(\.finishBurst) private var finishEnabled
+    @Environment(\.finishMinimum) private var finishMinimum
 
     @State private var burstStart: Date?
     @State private var center = CGPoint.zero
+    @State private var busySince: Date?
 
     private var lit: LampPalette? { theme.lamp(for: look) }
     private var rim: LampPalette? { theme.rim(for: look) }
@@ -134,10 +171,17 @@ struct OrbView: View {
             let burst = animates ? Burst.progress(since: burstStart, at: context.date) : nil
             lamp(pulse: pulseOverride ?? (animates ? wave : Self.restingPulse), burst: burst)
         }
+        .onAppear { if look == .busy { busySince = Date() } }
         .onChange(of: look) { old, new in
+            // Answering a question puts you in the Claude already, so that run's finish isn't flashed.
+            if new == .busy, old != .busy { busySince = old == .waiting ? nil : Date() }
+            if finishEnabled, !reduceMotion, old == .busy, new == .idle,
+               let busySince, Date().timeIntervalSince(busySince) >= finishMinimum {
+                BurstOverlay.shared.fire(from: center, theme: theme, kind: .finished)
+            }
             if burstEnabled, !reduceMotion, new == .waiting, old != .waiting {
                 burstStart = Date()
-                BurstOverlay.shared.fire(from: center, theme: theme)
+                BurstOverlay.shared.fire(from: center, theme: theme, kind: .waiting)
             }
         }
         .onGeometryChange(for: CGPoint.self) { proxy in

@@ -14,8 +14,15 @@ final class BurstOverlay {
     private static let reach: CGFloat = 0.25
 
     /// `point` is the lamp's center in the anchor window's coordinates, measured from its top left.
-    func fire(from point: CGPoint, theme: PanelTheme) {
+    private var lastFinish = Date.distantPast
+
+    func fire(from point: CGPoint, theme: PanelTheme, kind: BurstKind) {
         guard let anchor else { return }
+        // Several Claudes finishing together play one ripple, not a pile of them.
+        if kind == .finished {
+            guard Date().timeIntervalSince(lastFinish) > 1 else { return }
+            lastFinish = Date()
+        }
         let screen = anchor.screen ?? NSScreen.main
         guard let screen else { return }
 
@@ -35,13 +42,14 @@ final class BurstOverlay {
         window.contentView = NSHostingView(rootView: BurstScene(
             theme: theme,
             origin: origin,
-            maxRadius: screen.frame.width * Self.reach,
+            maxRadius: screen.frame.width * Self.reach * (kind == .finished ? 0.5 : 1),
+            kind: kind,
             start: Date()
         ))
         window.orderFrontRegardless()
 
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(Burst.duration + 0.2))
+            try? await Task.sleep(for: .seconds(kind.duration + 0.2))
             window.close()
         }
     }
@@ -51,20 +59,24 @@ private struct BurstScene: View {
     let theme: PanelTheme
     let origin: CGPoint
     let maxRadius: CGFloat
+    let kind: BurstKind
     let start: Date
 
     var body: some View {
         TimelineView(.animation) { context in
-            let progress = context.date.timeIntervalSince(start) / Burst.duration
+            let color = kind == .finished ? theme.busy.bloom : theme.waiting.bloom
+            let gentle = kind == .finished
+            let progress = context.date.timeIntervalSince(start) / kind.duration
             ZStack {
                 switch theme.finish {
-                case .frosted: FrostedRipple(color: theme.waiting.bloom, progress: progress, maxRadius: maxRadius)
-                case .solid: SolidBurst(color: theme.waiting.bloom, progress: progress, maxRadius: maxRadius)
-                case .glass: GlassBurst(color: theme.waiting.bloom, progress: progress, maxRadius: maxRadius)
-                case .jewel: JewelBurst(color: theme.waiting.bloom, progress: progress, maxRadius: maxRadius)
-                case .signal: SignalBurst(color: theme.waiting.bloom, progress: progress, maxRadius: maxRadius)
+                case .frosted: FrostedRipple(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
+                case .solid: SolidBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
+                case .glass: GlassBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
+                case .jewel: JewelBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
+                case .signal: SignalBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
                 }
             }
+            .opacity(gentle ? 0.75 : 1)
             .position(origin)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

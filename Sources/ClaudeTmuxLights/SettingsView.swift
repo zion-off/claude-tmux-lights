@@ -38,7 +38,19 @@ struct PanelTab: View {
             }
             Section("Alerts") {
                 Toggle("Flash a lamp when its Claude starts waiting", isOn: $prefs.attentionBurst)
-                Text("A brief burst that fires once, in the style of the current theme, so a waiting lamp is hard to miss. Skipped when Reduce Motion is on.")
+                Toggle("Also flash, more gently, when a Claude finishes", isOn: $prefs.finishBurst)
+                    .disabled(!prefs.attentionBurst)
+                LabeledContent("Only after it has worked for") {
+                    HStack {
+                        Slider(value: $prefs.finishMinimum, in: 0...60, step: 5)
+                            .frame(width: 160)
+                        Text(prefs.finishMinimum == 0 ? "any time" : "\(Int(prefs.finishMinimum)) s")
+                            .monospacedDigit()
+                            .frame(width: 56, alignment: .trailing)
+                    }
+                }
+                .disabled(!prefs.attentionBurst || !prefs.finishBurst)
+                Text("A brief burst that fires once, in the style of the current theme, so a waiting lamp is hard to miss. The finish flash is a softer blue version, and only plays after a Claude has worked for the time you choose, so quick replies stay quiet. Both are skipped when Reduce Motion is on.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

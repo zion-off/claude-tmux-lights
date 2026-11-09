@@ -10,6 +10,7 @@ struct SolidBurst: View {
     let color: Color
     let progress: Double
     let maxRadius: CGFloat
+    var gentle = false
 
     var body: some View {
         let p = progress
@@ -33,9 +34,10 @@ struct GlassBurst: View {
     let color: Color
     let progress: Double
     let maxRadius: CGFloat
+    var gentle = false
 
     var body: some View {
-        ForEach(0..<5, id: \.self) { i in
+        ForEach(0..<(gentle ? 2 : 5), id: \.self) { i in
             ring((progress - Double(i) * 0.1) / (1 - 0.4))
         }
     }
@@ -63,6 +65,7 @@ struct JewelBurst: View {
     let color: Color
     let progress: Double
     let maxRadius: CGFloat
+    var gentle = false
 
     var body: some View {
         let p = progress
@@ -70,7 +73,7 @@ struct JewelBurst: View {
             let fade = pow(1 - p, 1.1)
             let length = 2 * maxRadius * ease(min(1, p * 1.25))
             ZStack {
-                ForEach(0..<8, id: \.self) { i in
+                ForEach(Array(0..<8).filter { !gentle || $0.isMultiple(of: 2) }, id: \.self) { i in
                     let long = i.isMultiple(of: 2)
                     let rayLength = max(10, length * (long ? 1 : 0.55))
                     Capsule()
@@ -90,7 +93,7 @@ struct JewelBurst: View {
                 Circle()
                     .fill(RadialGradient(colors: [.white, color.opacity(0.7), .clear], center: .center, startRadius: 0, endRadius: 70))
                     .frame(width: 140, height: 140)
-                    .opacity(Burst.flash(p, span: 0.35))
+                    .opacity(Burst.flash(p, span: 0.35) * (gentle ? 0.3 : 1))
                     .scaleEffect(1 + 0.8 * p)
             }
             .rotationEffect(.degrees(30 * p))
@@ -104,6 +107,7 @@ struct SignalBurst: View {
     let color: Color
     let progress: Double
     let maxRadius: CGFloat
+    var gentle = false
 
     private struct Beam: Shape {
         func path(in rect: CGRect) -> Path {
@@ -122,7 +126,7 @@ struct SignalBurst: View {
             let reach = maxRadius * min(1, 0.25 + ease(p * 3))
             let fade = pow(1 - p, 0.8)
             ZStack {
-                ForEach(0..<2, id: \.self) { i in
+                ForEach(0..<(gentle ? 1 : 2), id: \.self) { i in
                     Beam()
                         .fill(RadialGradient(
                             colors: [.white.opacity(0.85 * fade), color.opacity(0.7 * fade), color.opacity(0)],
@@ -131,11 +135,11 @@ struct SignalBurst: View {
                         .frame(width: reach * 2, height: reach * 2)
                         .rotationEffect(.degrees(Double(i) * 180))
                 }
-                .rotationEffect(.degrees(720 * p - 90))
+                .rotationEffect(.degrees((gentle ? 360 : 720) * p - 90))
                 Circle()
                     .fill(RadialGradient(colors: [color, .clear], center: .center, startRadius: 0, endRadius: 110))
                     .frame(width: 220, height: 220)
-                    .opacity(0.9 * Burst.flash(p, span: 0.2))
+                    .opacity(gentle ? 0 : 0.9 * Burst.flash(p, span: 0.2))
             }
         }
     }
