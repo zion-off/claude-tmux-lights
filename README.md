@@ -1,4 +1,4 @@
-<img src="docs/demo.gif" width="100%" alt="The panel showing three Claudes, one turning amber and pulsing when it needs you, then the same panel with a glass background and each group labelled with its place and tmux session">
+<img src="docs/demo.gif" width="100%" alt="The panel on a macOS desktop in each of its five themes in turn, with lamps grouped and labelled by place: one turns amber and pulses when its Claude needs you, others glow blue while busy, and an offline place shows a dash until it reconnects">
 
 # Claude Tmux Lights
 
@@ -10,6 +10,8 @@ A floating macOS panel with one lamp per Claude Code session running in tmux.
 | Blue | Busy |
 | Blue ring | Only a background shell command is running |
 | Dark | Idle |
+
+Pick a look in Settings: Default, Glass, Jewel, Traffic Light or Frosted.
 | Dashed ring | Unknown status |
 | Dimmed `–` | Place not connected (see [Troubleshooting](#troubleshooting)) |
 | Tiny dot | All places connected, no Claudes running |
@@ -77,7 +79,7 @@ Sources/ClaudeTmuxLights/   the app (SwiftUI and AppKit)
 server/claude_traffic.py    the backend, bundled into the app
 scripts/bundle.sh           builds build/ClaudeTmuxLights.app
 tools/make-icon.sh          regenerates the app icon
-tools/make-demo.sh          regenerates docs/demo.gif
+tools/make-showcase.sh      renders a video of every theme, or docs/demo.gif with --readme
 tools/fake_server.py        replays scripted states for UI testing
 ```
 
