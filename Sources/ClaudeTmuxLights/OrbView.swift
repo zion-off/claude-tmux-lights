@@ -179,7 +179,9 @@ struct OrbView: View {
                let busySince, Date().timeIntervalSince(busySince) >= finishMinimum {
                 BurstOverlay.shared.fire(from: center, theme: theme, kind: .finished)
             }
-            if burstEnabled, !reduceMotion, new == .waiting, old != .waiting {
+            // Only a Claude that was working and then stopped for you counts. A dialog you open yourself, like
+            // /resume or a settings screen, turns an idle lamp amber too, but you are already in the Claude.
+            if burstEnabled, !reduceMotion, new == .waiting, old == .busy {
                 burstStart = Date()
                 BurstOverlay.shared.fire(from: center, theme: theme, kind: .waiting)
             }
