@@ -131,8 +131,9 @@ struct FishbowlBloom: View {
     private let opacity = Throb(steady: 0.36, base: 0.24, swing: 0.36)
 
     var body: some View {
-        if let lit {
-            let waiting = look == .waiting
+        // Only a waiting lamp throws light. A busy one is just blue water.
+        if let lit, look == .waiting {
+            let waiting = true
             let radius = CGFloat(reach.value(waiting: waiting, pulse: pulse))
             Circle()
                 .fill(RadialGradient(stops: falloffStops(lit.bloom), center: .center, startRadius: Bowl.diameter * 0.42, endRadius: radius))
@@ -216,6 +217,7 @@ struct FishbowlLens: View {
     private func scene(time: Double, water: WaterState) -> some View {
         let colors: [Color] = lit.map { [$0.top, $0.bottom] } ?? [Color(hex: 0x2B3F4A), theme.unlitLens]
         let glowing = lit != nil
+        let shining = look == .waiting
         let breath = breath
         let hasFish = look != .down
         let bowlRect = CGRect(x: 0, y: 0, width: d, height: d)
@@ -237,7 +239,7 @@ struct FishbowlLens: View {
             backLayer.fill(back.body, with: gradient)
             ctx.fill(front.body, with: gradient)
 
-            if glowing, let lit {
+            if shining, let lit {
                 // The lamp behind the bowl swells and fades with the pulse.
                 var glow = ctx
                 glow.clip(to: front.body)
