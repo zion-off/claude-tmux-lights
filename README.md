@@ -11,7 +11,7 @@ A floating macOS panel with one lamp per Claude Code session running in tmux.
 | Blue ring | Only a background shell command is running |
 | Dark | Idle |
 
-Pick a look in Settings: Default, Glass, Jewel, Traffic Light or Frosted.
+Pick a look in Settings: Default, Glass, Jewel, Traffic Light, Frosted or Fishbowl.
 | Dashed ring | Unknown status |
 | Dimmed `–` | Place not connected (see [Troubleshooting](#troubleshooting)) |
 | Tiny dot | All places connected, no Claudes running |
