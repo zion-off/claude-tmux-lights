@@ -43,15 +43,16 @@ swiftc -O "${sources[@]}" tools/showcase/main.swift -o "$work/make-showcase"
 case $mode in
   video) output=build/showcase.mp4 ;;
   4k) output=build/showcase-4k.mp4 ;;
-  readme) output=$work/strip.mp4 ;;
+  readme) output=build/strip.mp4 ;;
 esac
 mkdir -p build
 "$work/make-showcase" "$wallpaper" "$output" ${flags[@]+"${flags[@]}"} | grep -v '^frame'
 
 if [[ $mode == readme ]]; then
-  # Ordered dithering keeps the wallpaper's gradients smooth and the file far smaller than error diffusion.
+  # One palette for the whole clip, picked from every frame, and error-diffusion dithering: the wallpaper's
+  # gradients stay smooth, with no ordered-dither crosshatch over the lamps.
   ffmpeg -v error -y -i "$output" \
-    -vf "split[a][b];[a]palettegen=max_colors=256:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
+    -vf "split[a][b];[a]palettegen=max_colors=256:stats_mode=full[p];[b][p]paletteuse=dither=sierra2_4a" \
     -loop 0 docs/demo.gif
   output=docs/demo.gif
 fi

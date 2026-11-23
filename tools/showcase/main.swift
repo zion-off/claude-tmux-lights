@@ -161,7 +161,7 @@ struct Scene: View {
         pulse: phase * phase * (3 - 2 * phase),
         wallpaper: wallpaper
     )
-    let renderer = ImageRenderer(content: scene)
+    let renderer = ImageRenderer(content: scene.environment(\.waterClock, time))
     renderer.scale = renderScale
     return renderer.cgImage!
 }

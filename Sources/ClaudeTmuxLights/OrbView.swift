@@ -241,7 +241,7 @@ struct OrbView: View {
         case .glass: GlassBead(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .jewel: JewelLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .signal: SignalLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
-        case .fishbowl: FishbowlLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
+        case .fishbowl: FishbowlLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse, salt: tooltip)
         case .frosted: FrostedButton(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse, burst: burst)
         }
     }

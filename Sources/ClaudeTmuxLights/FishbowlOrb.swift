@@ -60,6 +60,19 @@ private struct BowlShape: Shape {
     }
 }
 
+/// Lets the demo generator drive the water from its own clock, so a rendered frame shows the fish and
+/// waves where they would be at that moment. The app itself never sets it.
+private struct WaterClockKey: EnvironmentKey {
+    static let defaultValue: Double? = nil
+}
+
+extension EnvironmentValues {
+    var waterClock: Double? {
+        get { self[WaterClockKey.self] }
+        set { self[WaterClockKey.self] = newValue }
+    }
+}
+
 /// How agitated the water is: the tilt of its surface, and how much ripple it carries.
 struct WaterState {
     var tilt = 0.0
@@ -152,13 +165,23 @@ struct FishbowlLens: View {
     let rim: LampPalette?
     let theme: PanelTheme
     let pulse: Double
+    /// Tells this lamp from its neighbors when the bowl has to be the same every time it is drawn.
+    let salt: String
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.pulseOverride) private var pulseOverride
+    @Environment(\.waterClock) private var waterClock
 
     /// Makes this bowl its own: every bowl draws from the same clock, so without a seed they would all
     /// move in step. It is picked once per lamp and kept for as long as the lamp is on screen.
-    @State private var seed = Double.random(in: 0..<10_000)
+    @State private var randomSeed = Double.random(in: 0..<10_000)
+
+    /// Random in the app. Under a driven clock it comes from the lamp's name instead, because a demo
+    /// draws every frame from scratch and the bowls must not be re-rolled between frames.
+    private var seed: Double {
+        guard waterClock != nil else { return randomSeed }
+        return Double(salt.unicodeScalars.reduce(5381) { ($0 &* 33 &+ Int($1.value)) % 10_000 })
+    }
 
     /// A steady pseudo-random number between 0 and 1 for this bowl, one for each `key`.
     private func unit(_ key: Double) -> Double {
@@ -177,10 +200,10 @@ struct FishbowlLens: View {
 
     var body: some View {
         // The water always moves, unless motion is reduced or a frame is being held for a still.
-        let still = reduceMotion || pulseOverride != nil
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still)) { context in
-            let time = still ? 0 : context.date.timeIntervalSinceReferenceDate
-            let water = still ? WaterState() : WaterSlosh.shared.advance(to: context.date)
+        let still = reduceMotion || (pulseOverride != nil && waterClock == nil)
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still || waterClock != nil)) { context in
+            let time = waterClock ?? (still ? 0 : context.date.timeIntervalSinceReferenceDate)
+            let water = still || waterClock != nil ? WaterState() : WaterSlosh.shared.advance(to: context.date)
             bowl(time: time, water: water)
         }
     }
