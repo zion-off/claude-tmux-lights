@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private lazy var panel: FloatingPanel = makePanel()
     private lazy var sizer = PanelSizer(panel: panel)
-    private var settingsWindow: NSWindow?
+    private var settingsWindow: SettingsWindowController?
     private var subscriptions = Set<AnyCancellable>()
 
     init(prefs: Preferences, hub: StreamHub) {
@@ -91,9 +91,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showSettings() {
-        if settingsWindow == nil { settingsWindow = SettingsWindow.make(prefs: prefs) }
+        if settingsWindow == nil { settingsWindow = SettingsWindowController(prefs: prefs) }
         NSApp.activate()
-        settingsWindow?.makeKeyAndOrderFront(nil)
+        settingsWindow?.window?.makeKeyAndOrderFront(nil)
     }
 
     private func applyLevel(_ onTop: Bool) {
