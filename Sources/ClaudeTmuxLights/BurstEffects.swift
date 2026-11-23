@@ -145,7 +145,7 @@ struct SignalBurst: View {
     }
 }
 
-/// Fishbowl: a drop hits the water. Squashed ripples spread across the surface while bubbles rise and pop.
+/// Fishbowl: a drop hits the water. Round ripples spread out from the lamp while bubbles rise and pop.
 struct FishbowlBurst: View {
     let color: Color
     let progress: Double
@@ -167,13 +167,13 @@ struct FishbowlBurst: View {
         if p > 0, p < 1 {
             let diameter = max(24, 2 * maxRadius * ease(p))
             let fade = pow(1 - p, 1.3)
-            Ellipse()
+            Circle()
                 .strokeBorder(
                     LinearGradient(colors: [.white.opacity(0.85 * fade), color.opacity(0.45 * fade), .white.opacity(0.3 * fade)], startPoint: .top, endPoint: .bottom),
                     lineWidth: 3 * (1 - p) + 0.8
                 )
                 .blur(radius: 0.5)
-                .frame(width: diameter, height: diameter * 0.55)
+                .frame(width: diameter, height: diameter)
         }
     }
 
