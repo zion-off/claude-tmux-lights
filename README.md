@@ -39,7 +39,7 @@ Claudes in tmux on this Mac show up immediately. The app has no Dock icon. Right
 
 ## Places
 
-Add places in Settings under Places. A place is shown only while its checkbox is ticked. With more than one place, the right-click menu has a Show submenu to toggle them.
+Add places in Settings under Places with Add Place…, and change or remove one with its Details… button. A place is shown only while its switch is on. With more than one place, the right-click menu has a Show submenu to toggle them.
 
 - **This Mac** is there by default. The app runs the backend itself and stops it on quit.
 - **Another computer (SSH)** takes an SSH host or `user@host`. The app pipes the backend script to `python3` over SSH, so nothing is installed on the other machine, which needs `python3` and `tmux`. SSH runs with `BatchMode=yes`, so a password prompt fails.
@@ -47,7 +47,7 @@ Add places in Settings under Places. A place is shown only while its checkbox is
 
 ## Settings
 
-The Panel tab has Open at login, Stack the lamps vertically, Show a background behind the lamps (off by default), Keep the panel above other windows (on by default, and it covers fullscreen apps), and options to label each group with its place name and tmux session name. For Open at login, keep the app in Applications so macOS can find it. Reset everything, including the panel position, with `defaults delete dev.local.ClaudeTmuxLights`.
+Settings has a sidebar with four sections. General has Open at login and Keep the panel above other windows (on by default, and it covers fullscreen apps). Appearance has the theme, Stack the lamps vertically, Show a background behind the lamps (off by default), and options to label each group with its place name and tmux session name. Alerts has the waiting and finish flashes. Places is described above. For Open at login, keep the app in Applications so macOS can find it. Reset everything, including the panel position, with `defaults delete dev.local.ClaudeTmuxLights`.
 
 ## Troubleshooting
 
