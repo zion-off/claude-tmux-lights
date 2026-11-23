@@ -52,6 +52,8 @@ let lineups: [[Entry]] = [
     [lamp(thisMac, "1", "idle"), lamp(thisMac, "2", "busy"), lamp(mini, "1", "waiting"), lamp(mini, "2", "shell")],
     // Frosted
     [lamp(thisMac, "3", "waiting"), lamp(vm, "1", "busy"), lamp(mini, "2", "idle"), lamp(devbox, "4", "shell")],
+    // Fishbowl
+    [lamp(thisMac, "1", "busy"), lamp(thisMac, "2", "waiting"), lamp(vm, "1", "idle"), offline(devbox)],
 ]
 
 // MARK: Wallpaper

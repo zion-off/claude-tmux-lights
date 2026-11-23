@@ -38,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &subscriptions)
 
         BurstOverlay.shared.anchor = panel
+        WaterSlosh.shared.watch(panel)
         panel.orderFrontRegardless()
     }
 

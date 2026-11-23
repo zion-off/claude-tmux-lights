@@ -74,6 +74,7 @@ private struct BurstScene: View {
                 case .glass: GlassBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
                 case .jewel: JewelBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
                 case .signal: SignalBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
+                case .fishbowl: FishbowlBurst(color: color, progress: progress, maxRadius: maxRadius, gentle: gentle)
                 }
             }
             .opacity(gentle ? 0.75 : 1)

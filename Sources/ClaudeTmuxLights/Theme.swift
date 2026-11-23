@@ -54,6 +54,8 @@ struct PanelTheme: Identifiable {
         case signal
         /// Concave caps of frosted plastic, each lit by one LED, on a control panel.
         case frosted
+        /// A glass bowl of water with a goldfish in it, lit from behind.
+        case fishbowl
 
         /// Whether a shell-only wait dimly lights the whole lens rather than just its rim. The numeral
         /// then sits on a lit lens, so it takes the lit style.
@@ -132,7 +134,20 @@ struct PanelTheme: Identifiable {
         seam: Color.gray.opacity(0.5)
     )
 
-    static let all = [PanelTheme.default, .glass, .jewel, .signal, .frosted]
+    // The water is the lens, so its tints are deep aquatic blues and ambers that the numeral can sit on.
+    static let fishbowl = PanelTheme(
+        id: "fishbowl",
+        name: "Fishbowl",
+        finish: .fishbowl,
+        waiting: LampPalette(top: 0xFFC656, bottom: 0xE88A00, bloom: 0xFFB02E, haze: 0xFF8A00),
+        busy: LampPalette(top: 0x5CC4FF, bottom: 0x0B66D0, bloom: 0x3DA5FF, haze: 0x2B6BFF),
+        caseFill: Color(hex: 0x0E1418),
+        unlitLens: Color(hex: 0x1B2A33),
+        unlitLegend: Color(hex: 0x9AA6AE),
+        seam: Color.gray.opacity(0.5)
+    )
+
+    static let all = [PanelTheme.default, .glass, .jewel, .signal, .frosted, .fishbowl]
 
     static func named(_ id: String) -> PanelTheme {
         all.first { $0.id == id } ?? .default

@@ -203,6 +203,7 @@ struct OrbView: View {
         case .frosted: return pulse
         case .signal: return Int(burst / 0.06).isMultiple(of: 2) && burst < 0.5 ? 1 : pulse * 0.4
         case .jewel: return max(pulse, Burst.flash(burst, span: 0.3))
+        case .fishbowl: return max(pulse, Burst.flash(burst, span: 0.4))
         case .solid, .glass: return max(pulse, Burst.flash(burst))
         }
     }
@@ -212,7 +213,7 @@ struct OrbView: View {
         switch theme.finish {
         case .solid: 1 + 0.16 * Burst.flash(burst, span: 0.3)
         case .glass: 1 + 0.1 * Burst.flash(burst, span: 0.4)
-        case .jewel, .signal, .frosted: 1
+        case .jewel, .signal, .frosted, .fishbowl: 1
         }
     }
 
@@ -240,6 +241,7 @@ struct OrbView: View {
         case .glass: GlassBead(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .jewel: JewelLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .signal: SignalLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
+        case .fishbowl: FishbowlLens(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse)
         case .frosted: FrostedButton(look: look, lit: lit, rim: rim, theme: theme, pulse: pulse, burst: burst)
         }
     }
@@ -250,6 +252,7 @@ struct OrbView: View {
         case .glass: GlassBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .jewel: JewelBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .signal: SignalBloom(look: look, lit: lit, rim: rim, pulse: pulse)
+        case .fishbowl: FishbowlBloom(look: look, lit: lit, rim: rim, pulse: pulse)
         case .frosted: FrostedBloom(look: look, lit: lit, rim: rim, pulse: pulse, burst: burst)
         }
     }

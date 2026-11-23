@@ -144,3 +144,57 @@ struct SignalBurst: View {
         }
     }
 }
+
+/// Fishbowl: a drop hits the water. Squashed ripples spread across the surface while bubbles rise and pop.
+struct FishbowlBurst: View {
+    let color: Color
+    let progress: Double
+    let maxRadius: CGFloat
+    var gentle = false
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<(gentle ? 2 : 4), id: \.self) { i in
+                ripple((progress - Double(i) * 0.12) / 0.64)
+            }
+            ForEach(0..<(gentle ? 6 : 14), id: \.self) { i in
+                bubble(i)
+            }
+        }
+    }
+
+    @ViewBuilder private func ripple(_ p: Double) -> some View {
+        if p > 0, p < 1 {
+            let diameter = max(24, 2 * maxRadius * ease(p))
+            let fade = pow(1 - p, 1.3)
+            Ellipse()
+                .strokeBorder(
+                    LinearGradient(colors: [.white.opacity(0.85 * fade), color.opacity(0.45 * fade), .white.opacity(0.3 * fade)], startPoint: .top, endPoint: .bottom),
+                    lineWidth: 3 * (1 - p) + 0.8
+                )
+                .blur(radius: 0.5)
+                .frame(width: diameter, height: diameter * 0.55)
+        }
+    }
+
+    /// Bubbles rise from the lamp, each at its own pace, drifting sideways as they go.
+    @ViewBuilder private func bubble(_ i: Int) -> some View {
+        let seed = Double(i)
+        let delay = (sin(seed * 12.9898) * 0.5 + 0.5) * 0.3
+        let p = (progress - delay) / (1 - 0.3)
+        if p > 0, p < 1 {
+            let size = 3 + CGFloat(i % 4) * 2
+            let x = CGFloat(sin(seed * 7.1)) * maxRadius * 0.45 + CGFloat(sin(p * 9 + seed)) * 3
+            let rise = maxRadius * (0.5 + 0.4 * (cos(seed * 3.3) * 0.5 + 0.5)) * pow(p, 0.8)
+            Circle()
+                .fill(RadialGradient(colors: [color.opacity(0.05), color.opacity(0.3)], center: .center, startRadius: 0, endRadius: size / 2))
+                .overlay(Circle().strokeBorder(.white.opacity(0.8), lineWidth: 0.8))
+                .overlay(alignment: .topLeading) {
+                    Circle().fill(.white.opacity(0.9)).frame(width: size * 0.25, height: size * 0.25).padding(size * 0.18)
+                }
+                .frame(width: size, height: size)
+                .offset(x: x, y: -rise)
+                .opacity(p > 0.85 ? (1 - p) / 0.15 : 1)
+        }
+    }
+}

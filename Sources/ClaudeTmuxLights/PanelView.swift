@@ -38,7 +38,7 @@ struct LightBar: View {
             case .glass: glassCase
             case .signal: SignalBackplate()
             case .frosted: FrostedPanel()
-            case .solid, .jewel: solidCase
+            case .solid, .jewel, .fishbowl: solidCase
             }
         } else {
             Capsule(style: .continuous).fill(Color.black.opacity(0.01))

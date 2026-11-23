@@ -34,6 +34,7 @@ struct PanelThemeTests {
         #expect(PanelTheme.named("jewel").finish == .jewel)
         #expect(PanelTheme.named("signal").finish == .signal)
         #expect(PanelTheme.named("frosted").finish == .frosted)
+        #expect(PanelTheme.named("fishbowl").finish == .fishbowl)
     }
 
     @Test func themeIDsAreUnique() {
