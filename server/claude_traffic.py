@@ -19,7 +19,7 @@ import os
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
@@ -44,6 +44,12 @@ class ClaudeSession:
     status: str
     tmux_session: str
     window_id: str
+    job_id: str = ""
+    parked_job_id: str = ""
+
+    @property
+    def in_tmux(self) -> bool:
+        return bool(self.window_id)
 
 
 @dataclass(frozen=True)
@@ -82,13 +88,16 @@ class SessionReader:
             data = json.loads(path.read_text())
             tmux_ref = data.get("tmux") or ""
             tmux_session, _, pane_ref = tmux_ref.partition(":")
-            if not tmux_session or not pane_ref:
+            job_id = str(data.get("jobId") or "")
+            if (not tmux_session or not pane_ref) and not job_id:
                 return None
             return ClaudeSession(
                 pid=int(data["pid"]),
                 status=str(data["status"]),
-                tmux_session=tmux_session,
-                window_id=pane_ref.split(".")[0],
+                tmux_session=tmux_session if pane_ref else "",
+                window_id=pane_ref.split(".")[0] if tmux_session else "",
+                job_id=job_id,
+                parked_job_id=str(data.get("parkedJobId") or ""),
             )
         except (OSError, ValueError, KeyError):
             logger.debug("skipped unreadable session file=%s", path.name)
@@ -131,9 +140,28 @@ class TmuxClient:
         return result.stdout
 
 
+def stronger_status(first: str, second: str) -> str:
+    return second if STATUS_RANK.get(second, 0) > STATUS_RANK.get(first, 0) else first
+
+
+def fold_parked_jobs(sessions: List[ClaudeSession]) -> List[ClaudeSession]:
+    """Returns only the sessions in tmux. A session that parked its work in a background
+    job reports idle while the job runs, so the job's status counts toward its window."""
+    jobs = {s.job_id: s for s in sessions if s.job_id and not s.in_tmux}
+    folded = []
+    for session in sessions:
+        if not session.in_tmux:
+            continue
+        job = jobs.get(session.parked_job_id) if session.parked_job_id else None
+        if job is not None:
+            session = replace(session, status=stronger_status(session.status, job.status))
+        folded.append(session)
+    return folded
+
+
 def strongest_session_per_window(sessions: List[ClaudeSession]) -> Dict[str, ClaudeSession]:
     strongest: Dict[str, ClaudeSession] = {}
-    for session in sessions:
+    for session in fold_parked_jobs(sessions):
         current = strongest.get(session.window_id)
         if current is None or STATUS_RANK.get(session.status, 0) > STATUS_RANK.get(current.status, 0):
             strongest[session.window_id] = session
